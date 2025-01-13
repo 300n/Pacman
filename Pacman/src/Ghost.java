@@ -9,6 +9,7 @@ public abstract class Ghost {
 
     int x, y, facing, previous_x, previous_y;
     Color couleur;
+    double speed = 1;
     Pacman__ p = new Pacman__();
     int radius = 28;
     double interpolatedX, interpolatedY;
@@ -18,6 +19,7 @@ public abstract class Ghost {
         radius + 1, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius + 1, radius + 1, radius - 1, radius - 1, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7,
         radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius / 2 + radius / 14 + 1, radius / 2 + radius / 14 + 1};
     boolean mooving = false;
+    String mode, previous_mode;
 
     public Ghost(int x, int y, Color couleur) {
         this.x = x;
@@ -82,22 +84,6 @@ public abstract class Ghost {
     }
 
     public void draw_ghost_moving(GraphicsContext gc) {
-        /*
-        if (this.mooving) {
-            System.out.println("Sauce1");
-            this.ranges[11] += 2;
-            this.ranges[12] += 2;
-            this.ranges[16] += 2;
-            this.ranges[17] += 2;
-            this.mooving = false;
-        } else {
-            System.out.println("Sauce2");
-            this.mooving = true;
-            this.ranges[11] -= 2;
-            this.ranges[12] -= 2;
-            this.ranges[16] -= 2;
-            this.ranges[17] -= 2;
-        }*/
         PixelWriter pixelWriter = gc.getPixelWriter();
         double top_left_corner_x = p.board_top_x + p.width / p.tab[0].length * this.interpolatedX + p.width / p.tab[0].length / 2 - radius / 2;
         double top_left_corner_y = p.board_top_y + p.height / p.tab.length * this.interpolatedY + p.height / p.tab.length / 2 - radius / 2;
@@ -172,33 +158,196 @@ public abstract class Ghost {
         gc.fillRect(x + 16, y + 10, 4, 4);
     }
 
-    public void frightened_mode(int pac_x, int pac_y, int[][] tab) {
-        ArrayList<int[]> mooving_to = new ArrayList();
-        this.previous_x = this.x;
-        this.previous_y = this.y;
-        mooving_to.add(pac_x - this.x > 0 ? new int[]{0, -1} : new int[]{0, 1});
-        mooving_to.add(pac_y - this.y > 0 ? new int[]{-1, 0} : new int[]{1, 0});
-        int old_x = this.x;
-        int old_y = this.y;
+    public abstract void reset();
 
-        if (tab[this.y][this.x + mooving_to.get(0)[1]] != 1) {
-            if (tab[this.y + mooving_to.get(1)[0]][this.x] != 1) {
-                int[] randomMove = mooving_to.get((int) (Math.random() * 2));
-                this.x += randomMove[1];
-                this.y += randomMove[0];
+    public double norme_2(Vector2 pac_coords, Vector2 next_cords) {
+        double dx = pac_coords.x - (this.x + next_cords.x);
+        double dy = pac_coords.y - (this.y + next_cords.y);
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    public boolean targets_in_bounds(double targetX, double targetY) {
+        return targetX >= 0 && targetX <= this.p.tab[0].length - 1 && targetY >= 0 && targetY <= this.p.tab.length - 1;
+    }
+
+    private Vector2 chooseBestMove(ArrayList<Vector2> moves, Vector2 target) {
+        double min = Double.MAX_VALUE;
+        Vector2 bestMove = null;
+        double epsilon = 0.001;
+
+        for (Vector2 move : moves) {
+            double distance = norme_2(target, move);
+
+            if (distance < min - epsilon) {
+                min = distance;
+                bestMove = move;
+            } else if (Math.abs(distance - min) < epsilon) {
+                int indexBest = bestMove.x != 0 ? (bestMove.x < 0 ? 2 : 4) : (bestMove.y < 0 ? 1 : 3);
+                int indexCurrent = move.x != 0 ? (move.x < 0 ? 2 : 4) : (move.y < 0 ? 1 : 3);
+                if (indexCurrent < indexBest) {
+                    bestMove = move;
+                }
+            }
+        }
+
+        return bestMove;
+    }
+
+    public void update(Vector2 pac_coords, int t, int pac_facing, Vector2 blinky_coords) {
+
+        int facing;
+        if (this.x - this.previous_x < 0) {
+            facing = 180;
+        } else if (this.x - this.previous_x > 0) {
+            facing = 0;
+        } else if (this.y - this.previous_y < 0) {
+            facing = 90;
+        } else if (this.y - this.previous_y > 0) {
+            facing = 270;
+        } else {
+            facing = 0; // Valeur par défaut ou cas où il n'y a pas de mouvement.
+        }
+        /* Trois différent dans lequels les fantômes font un 180 : 
+            - Pacman vient de manger une powerpellet
+            - Changement de n'importe quel mode vers le mode chase
+            - Changement du mode chase vers le mode scatter 
+         */
+        if ((t == 15 && "frightened".equals(this.mode)) || ("chase".equals(this.mode) && !"chase".equals(this.previous_mode)) || ("scatter".equals(this.mode) && "chase".equals(this.previous_mode))) {
+            facing = (facing + 180) % 360;
+        }
+        ArrayList<Vector2> mooves_available = new ArrayList();
+        // Les fantômes ne pouvant pas faire demi-tour sur eux mêmes, on interdit la direction opposée
+        switch (facing) {
+            case 0 -> {
+                mooves_available.add(new Vector2(1.0, 0.0));
+                mooves_available.add(new Vector2(0.0, 1.0));
+                mooves_available.add(new Vector2(0.0, -1.0));
+            }
+            case 90 -> {
+                mooves_available.add(new Vector2(1.0, 0.0));
+                mooves_available.add(new Vector2(-1.0, 0.0));
+                mooves_available.add(new Vector2(0.0, -1.0));
+            }
+            case 180 -> {
+                mooves_available.add(new Vector2(-1.0, 0.0));
+                mooves_available.add(new Vector2(0.0, 1.0));
+                mooves_available.add(new Vector2(0.0, -1.0));
+            }
+            case 270 -> {
+                mooves_available.add(new Vector2(1.0, 0.0));
+                mooves_available.add(new Vector2(-1.0, 0.0));
+                mooves_available.add(new Vector2(0.0, 1.0));
+            }
+        }
+
+        ArrayList<Vector2> valid_moves = new ArrayList<>();
+        for (Vector2 moove : mooves_available) {
+            if (this.p.tab[(int) (this.y + moove.y)][(int) (this.x + moove.x)] != 1) {
+                valid_moves.add(moove);
+            }
+        }
+        mooves_available = valid_moves;
+        Vector2 chosenMove = new Vector2(0.0, 0.0);
+        if ("frightened".equals(this.mode)) {
+            // Cette fois ci on choisit un déplacement aléatoire parmis les déplacements restant
+            if (!mooves_available.isEmpty()) {
+                Random r = new Random();
+                chosenMove = mooves_available.get(r.nextInt(mooves_available.size()));
+            }
+        } else if ("chase".equals(this.mode)) {
+            Vector2 target = pac_coords;
+            if (this.getClass() == Blinky.class) {
+                target = pac_coords;
+            } else if (this.getClass() == Clyde.class) {
+                if (Math.sqrt((this.x - pac_coords.x) * (this.x - pac_coords.x) + (this.y - pac_coords.y) * (this.y - pac_coords.y)) <= 8) {
+                    target = new Vector2(0, 20);
+                } else {
+                    target = pac_coords;
+                }
+            } else if (this.getClass() == Pinky.class) {
+                switch (pac_facing) {
+                    case 0 ->
+                        target = new Vector2(pac_coords.x + 4, pac_coords.y);
+                    case 90 ->
+                        target = new Vector2(pac_coords.x - 4, pac_coords.y - 4); // bug (overflow) présent sur le jeu de base expliqué ici https://www.youtube.com/watch?v=ataGotQ7ir8&t=358s à 7:27
+                    case 180 ->
+                        target = new Vector2(pac_coords.x - 4, pac_coords.y);
+                    case 270 ->
+                        target = new Vector2(pac_coords.x + 4, pac_coords.y);
+                }
+            } else if (this.getClass() == Inky.class) {
+                switch (pac_facing) {
+                    case 0 ->
+                        target = new Vector2(pac_coords.x + 2, pac_coords.y);
+                    case 90 ->
+                        target = new Vector2(pac_coords.x - 2, pac_coords.y - 2);
+                    case 180 ->
+                        target = new Vector2(pac_coords.x - 2, pac_coords.y);
+                    case 270 ->
+                        target = new Vector2(pac_coords.x + 2, pac_coords.y);
+                }
+                target = new Vector2(2 * target.x - blinky_coords.x, 2 * target.y - blinky_coords.y);
+            }
+
+            chosenMove = chooseBestMove(mooves_available, target);
+
+        } else if ("scatter".equals(this.mode)) {
+            // Ici le fantôme cherche à atteindre ça cible dans un des quatres coin de la map
+            Vector2 target = new Vector2(0, 0);
+            if (this.getClass() == Blinky.class) {
+                target = new Vector2(17, 0);
+            } else if (this.getClass() == Clyde.class) {
+                target = new Vector2(0, 20);
+            } else if (this.getClass() == Pinky.class) {
+                target = new Vector2(3, 0);
+            } else if (this.getClass() == Inky.class) {
+                target = new Vector2(20, 20);
+            }
+            chosenMove = chooseBestMove(mooves_available, target);
+        } else if ("eaten".equals(this.mode)) {
+            Vector2 target = new Vector2(8, 10);
+            chosenMove = chooseBestMove(mooves_available, target);
+        }
+
+        /* Cas où le fantôme arrive par exemple par la gauche sur un partern du type:
+                  1  1
+               -> 0  1
+                  1  1
+           Obligation de revenir en arrière
+         */
+        if (mooves_available.size() == 0) {
+            facing = (this.facing + 180) % 360;
+            switch (facing) {
+                case 0 ->
+                    chosenMove = new Vector2(1.0, 0.0);
+                case 90 ->
+                    chosenMove = new Vector2(0.0, -1.0);
+                case 180 ->
+                    chosenMove = new Vector2(-1.0, 0.0);
+                case 270 ->
+                    chosenMove = new Vector2(0.0, 1.0);
+            }
+        }
+        if (chosenMove.x != 0.0 || chosenMove.y != 0.0) {
+
+            if (this.y == 10 && this.x == 0 && chosenMove.x < 0) {
+                this.x = 20;
+                this.previous_x = 20;
+                this.facing = 180;
+            } else if (this.y == 10 && this.x == 20 && chosenMove.x > 0) {
+                this.x = 0;
+                this.previous_x = 0;
+                this.facing = 0;
             } else {
-                this.x += mooving_to.get(0)[1];
+                this.previous_x = this.x;
+                this.previous_y = this.y;
+                this.x += chosenMove.x;
+                this.y += chosenMove.y;
             }
         } else {
-            if (tab[this.y + mooving_to.get(1)[0]][this.x] != 1) {
-                this.y += mooving_to.get(1)[0];
-            }
+            System.out.println("ERROR");
         }
-        if (old_x == this.x && old_y == this.y) {
-            this.update_randomly(tab);
-        }
+
     }
-    public abstract void Dijkstra(int desti_x, int desti_y, int pac_facing, int[][] tab, int blinky_x, int blinky_y, String mode);
-    public abstract void reset();
 
 }
