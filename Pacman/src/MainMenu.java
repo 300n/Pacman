@@ -50,10 +50,10 @@ public class MainMenu extends Application {
             this.customFont = Font.font("Arial", 20);
         }
         this.primaryStage = primaryStage;
-        this.List_Touches_joueurs.add(new Touches_joueur("Z", "Q", "S", "D"));
+        this.List_Touches_joueurs.add(new Touches_joueur("z", "q", "s", "d"));
         this.List_Touches_joueurs.add(new Touches_joueur("UP", "LEFT", "DOWN", "RIGHT"));
-        this.List_Touches_joueurs.add(new Touches_joueur("T", "F", "G", "H"));
-        this.List_Touches_joueurs.add(new Touches_joueur("I", "J", "K", "L"));
+        this.List_Touches_joueurs.add(new Touches_joueur("t", "f", "g", "h"));
+        this.List_Touches_joueurs.add(new Touches_joueur("i", "j", "k", "l"));
         // Créer les scènes
         Scene mainMenuScene = createMainMenu();
         Scene newGameScene = createNewGameScene();
@@ -266,7 +266,8 @@ public class MainMenu extends Application {
     private Scene createOptionsScene() {
         AnchorPane layout = new AnchorPane();
 
-        layout.setStyle("-fx-padding: 10; -fx-alignment: center;");
+        layout.setStyle("-fx-padding: 10; -fx-alignment: center;-fx-background-color: rgb(20, 20, 20);");
+        
 
         // Création des boutons avec les valeurs initiales
         ArrayList<Button> Button_List = new ArrayList();
@@ -281,7 +282,6 @@ public class MainMenu extends Application {
 
         // Création du Canvas pour dessiner la grille
         Canvas canvas = new Canvas(width, height); // Dimensions arbitraires
-        drawGrid(canvas, 25); // Appel de la méthode pour dessiner la grille
 
         // Ajout du Canvas au layout
         layout.getChildren().add(canvas);

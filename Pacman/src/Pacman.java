@@ -188,44 +188,26 @@ public class Pacman {
     public void direction_changed(ArrayList<Buffer_Input> Input_Buffer, Touches_joueur Touches) {
         
         double epsilon = 0.8;
-        // Ne change la direction que si Pacman a terminé son mouvement actuel (x ou y est un entier)
-        //System.out.println("(Math.abs(this.interpolatedX - Math.floor(this.x)) = "+(Math.abs(this.interpolatedX - Math.floor(this.x))));
-        //System.out.println("Math.abs(this.interpolatedY - Math.floor(this.y)) = "+Math.abs(this.interpolatedY - Math.floor(this.y)));
-        //System.out.println("Input_Buffer.size() = "+Input_Buffer.size());
-        //System.out.println("p.tab["+((int) this.y)+"]["+((int) this.x+1)+"] = "+p.tab[(int) this.y][(int) this.x+1]);
-        //System.out.println("p.tab["+((int) this.y)+"]["+((int) this.x-1)+"] = "+p.tab[(int) this.y][(int) this.x-1]);
-        //if(!Input_Buffer.isEmpty()){System.out.println("Input_Buffer.get(0) = "+Input_Buffer.get(0)+" && Touches.mooves.get(2).toLowerCase() = "+Touches.mooves.get(2).toLowerCase());
-        //System.out.println(" Touches.mooves.get(0).toUpperCase().toLowerCase() = "+Touches.mooves.get(0).toUpperCase().toLowerCase()+" Input_Buffer.get(0).equals(Touches.mooves.get(1).toLowerCase() = "+Input_Buffer.get(0).equals(Touches.mooves.get(1).toLowerCase()));}
-        //System.out.println("Touches.mooves.get(3).toLowerCase() = "+Touches.mooves.get(3).toLowerCase());
         if (!Input_Buffer.isEmpty()) {
-            // Vérification des directions possibles
-            if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(0).toUpperCase().toLowerCase())) { // Moove_up
-                //System.out.println("interpolatedY = "+ interpolatedY+ " && interpolatedX = "+interpolatedX);
-                //System.out.println("p.tab["+((int) Math.round(this.interpolatedY-1))+"]["+((int)Math.round(this.interpolatedX))+"] = "+p.tab[(int) Math.round(this.interpolatedY)-1][(int) Math.round(this.interpolatedX)]);
+            if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(0))) { // Moove_up
                 if (p.tab[(int) Math.round(this.interpolatedY) - 1][(int)Math.round(this.interpolatedX)] != 1) {
                     this.facing = 90;
                     this.coords.x = (int)Math.round(this.interpolatedX);
                     Input_Buffer.remove(0);
                 }
-            } else if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(1).toLowerCase())) { // Moove_down
-                //System.out.println("interpolatedY = "+ interpolatedY+ " && interpolatedX = "+interpolatedX);
-                //System.out.println("p.tab["+((int) Math.round(this.interpolatedY+1))+"]["+((int)Math.round(this.interpolatedX))+"] = "+p.tab[(int) Math.round(this.interpolatedY)+1][(int) Math.round(this.interpolatedX)]);
+            } else if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(1))) { // Moove_down
                 if (p.tab[(int) Math.round(this.interpolatedY) + 1][(int)Math.round(this.interpolatedX)] != 1) {
                     this.facing = 270;
                     this.coords.x = (int)Math.round(this.interpolatedX);
                     Input_Buffer.remove(0);
                 }
-            } else if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(2).toLowerCase())) { // Moove_left
-                //System.out.println("interpolatedY = "+ interpolatedY+ " && interpolatedX = "+interpolatedX);
-                //System.out.println("p.tab["+((int) Math.round(this.interpolatedY))+"]["+((int)Math.round(this.interpolatedX) - 1)+"] = "+p.tab[(int) Math.round(this.interpolatedY)][(int) Math.round(this.interpolatedX) - 1]);
+            } else if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(2))) { // Moove_left
                 if (p.tab[(int)Math.round(this.interpolatedY)][(int) Math.round(this.interpolatedX) - 1] != 1) {
                     this.facing = 180;
                     this.coords.y = (int)Math.round(this.interpolatedY);
                     Input_Buffer.remove(0);
                 }
-            } else if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(3).toLowerCase())) { // Moove_right
-                //System.out.println("interpolatedY = "+ interpolatedY+ " && interpolatedX = "+interpolatedX);
-                //System.out.println("p.tab["+((int) Math.round(this.interpolatedY))+"]["+((int)Math.round(this.interpolatedX) + 1)+"] = "+p.tab[(int) Math.round(this.interpolatedY)][(int) Math.round(this.interpolatedX) + 1]);
+            } else if (Input_Buffer.get(0).Input.equals(Touches.mooves.get(3))) { // Moove_right
                 if (p.tab[(int)Math.round(this.interpolatedY)][(int) Math.round(this.interpolatedX) + 1] != 1) {
                     this.facing = 0;
                     this.coords.y = Math.round(this.interpolatedY);
@@ -234,7 +216,6 @@ public class Pacman {
             }
             
         }
-        //System.out.println("this.facing = "+this.facing);
     }
 
     public void draw_vies(GraphicsContext gc) {

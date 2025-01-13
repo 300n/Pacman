@@ -64,8 +64,8 @@ public class Pacman__ {
     public int[][] levels_phase = {
         // temp en ms de chaque phase pour chaque level
         // level  scatter     chase       scatter   chase      scatter    chase      scatter 
-        {1, 7_000, 20_000, 7_000, 20_000, 5_000, 20_000, 5_000},
-        {234, 7_000, 20_000, 7_000, 20_000, 5_000, 1_033_140, 10},
+        {1,       7_000,      20_000,      7_000,  20_000,     5_000,    20_000,     5_000},
+        {234,     7_000,      20_000,      7_000,  20_000,     5_000, 1_033_140, 10},
         {5 + 0, 5_000, 20_000, 5_000, 20_000, 5_000, 1_037_140, 10},};
 
     private int iterationCount = 0;
