@@ -6,18 +6,18 @@ import javafx.scene.paint.Color;
 
 public class Pinky extends Ghost {
 
-    public Pinky() {
-        super(11, 10, Color.rgb(254, 176, 243, 0.8));
+    public Pinky(int facing,int radius) {
+        super(11, 10, Color.rgb(254, 176, 243, 0.8), facing, radius);
     }
 
     static int[] dy = {-1, 1, 0, 0};
     static int[] dx = {0, 0, -1, 1};
 
     public void reset() {
-        this.x = 11;
+        this.x = 9;
         this.y = 10;
-        this.previous_x = 11;
-        this.previous_y = 10;
+        this.previous_x = 9;
+        this.previous_y = 11;
         this.facing = 90;
     }
 

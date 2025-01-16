@@ -1,6 +1,3 @@
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,8 +12,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -49,6 +44,7 @@ public class MainMenu extends Application {
             System.err.println("Failed to load custom font: " + e.getMessage());
             this.customFont = Font.font("Arial", 20);
         }
+        primaryStage.getIcons().add(new Image("/ressources/Pacman_icon2.png"));
         this.primaryStage = primaryStage;
         this.List_Touches_joueurs.add(new Touches_joueur("z", "q", "s", "d"));
         this.List_Touches_joueurs.add(new Touches_joueur("UP", "LEFT", "DOWN", "RIGHT"));
@@ -74,7 +70,7 @@ public class MainMenu extends Application {
         ArrayList<Button> Button_List = new ArrayList();
         Button_List.add(new Button("Nouvelle Partie"));
         Button_List.add(new Button("Options"));
-        Button_List.add(new Button("Highscore"));
+        Button_List.add(new Button("Highscores"));
         Button_List.add(new Button("Quitter"));
 
         Image image = new Image("/ressources/Pacman_main_logo.png");
@@ -130,8 +126,25 @@ public class MainMenu extends Application {
         for (int i = 0; i < Button_List.size(); i++) {
             menuLayout.getChildren().add(Button_List.get(i));
         }
-        
         menuLayout.getChildren().add(imageView);
+        ArrayList<Ghost> List_Ghost = new ArrayList();
+        List_Ghost.add(new Blinky(90,56));
+        List_Ghost.add(new Clyde(90,56));
+        List_Ghost.add(new Pinky(90,28));
+        List_Ghost.add(new Inky(90,28));
+        int iteration_count = 0;
+        for(Ghost ghost: List_Ghost) {
+            if (iteration_count%2==0) {
+                ghost.x = 24;
+            } else {
+                ghost.x = 20;
+            }
+            ghost.y = 6+3*iteration_count;
+            iteration_count++;
+        }
+        for(Ghost ghost: List_Ghost) {
+            ghost.draw_ghost(gc);
+        }
 
         return new Scene(menuLayout, width, height);
     }

@@ -11,15 +11,15 @@ public class Blinky extends Ghost {
     static int[] dy = {-1, 1, 0, 0};
     static int[] dx = {0, 0, -1, 1};
 
-    public Blinky() {
-        super(11, 8, Color.rgb(255, 0, 0, 0.8));
+    public Blinky(int facing,int radius) {
+        super(11, 8, Color.rgb(255, 0, 0, 0.8), facing, radius);
     }
 
     public void reset() {
-        this.x = 11;
-        this.y = 8;
-        this.previous_x = 11;
-        this.previous_y = 8;
+        this.x = 10;
+        this.y = 9;
+        this.previous_x = 10;
+        this.previous_y = 10;
         this.facing = 90;
     }
 

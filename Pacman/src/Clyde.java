@@ -7,18 +7,18 @@ import javafx.scene.paint.Color;
 
 public class Clyde extends Ghost {
 
-    public Clyde() {
-        super(12, 10, Color.rgb(255, 127, 0, 0.8));
+    public Clyde(int facing,int radius) {
+        super(12, 10, Color.rgb(255, 127, 0, 0.8), facing, radius);
     }
 
     static int[] dy = {-1, 1, 0, 0};
     static int[] dx = {0, 0, -1, 1};
 
     public void reset() {
-        this.x = 12;
+        this.x = 10;
         this.y = 10;
-        this.previous_x = 12;
-        this.previous_y = 10;
+        this.previous_x = 10;
+        this.previous_y = 11;
         this.facing = 90;
     }
 

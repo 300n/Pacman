@@ -13,19 +13,20 @@ public abstract class Ghost {
     Pacman__ p = new Pacman__();
     int radius = 28;
     double interpolatedX, interpolatedY;
-    int[] offsets = {radius / 2 - radius / 14, radius / 2 - radius / 14, radius / 4 - radius / 28, radius / 4 - radius / 28, radius / 7, radius / 7, radius / 14, radius / 14, radius / 14, radius / 14,
-        0, 0, 0, 0, 0, 0, 0, 0, radius / 14, radius / 14, radius / 14, radius / 14, radius / 7, radius / 7, radius / 4 - radius / 28, radius / 4 - radius / 28, radius / 2 - radius / 14, radius / 2 - radius / 14};
-    int[] ranges = {radius / 2 + radius / 14 + 1, radius / 2 + radius / 14 + 1, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius - 1, radius - 1, radius + 1,
-        radius + 1, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius + 1, radius + 1, radius - 1, radius - 1, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7,
-        radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius / 2 + radius / 14 + 1, radius / 2 + radius / 14 + 1};
+
     boolean mooving = false;
     String mode, previous_mode;
+    int animation_eating_count = 1;
 
-    public Ghost(int x, int y, Color couleur) {
+    ArrayList<Vector2> next_positions_while_eaten = new ArrayList();
+
+    public Ghost(int x, int y, Color couleur, int facing, int radius) {
         this.x = x;
         this.y = y;
         this.facing = 90;
         this.couleur = couleur;
+        this.facing = facing;
+        this.radius = radius;
     }
 
     public void update_randomly(int[][] tab) {
@@ -54,13 +55,61 @@ public abstract class Ghost {
 
     public void draw_ghost(GraphicsContext gc) {
         PixelWriter pixelWriter = gc.getPixelWriter();
-        int top_left_corner_x = p.board_top_x + p.width / p.tab[0].length * this.x + p.width / p.tab[0].length / 2 - radius / 2;
-        int top_left_corner_y = p.board_top_y + p.height / p.tab.length * this.y + p.height / p.tab.length / 2 - radius / 2;
-        for (int col = 0; col < offsets.length; col++) {
-            for (int i = 1; i < ranges[col]; i++) {
-                pixelWriter.setColor(top_left_corner_x + col, top_left_corner_y + offsets[col] + i, this.couleur);
+
+        double scale = this.radius / 28;
+
+        int top_left_corner_x = (int) (p.board_top_x + p.width / p.tab[0].length * this.x
+                + p.width / p.tab[0].length / 2 - radius / 2);
+        int top_left_corner_y = (int) (p.board_top_y + p.height / p.tab.length * this.y
+                + p.height / p.tab.length / 2 - radius / 2);
+        int[] offsets = {
+            (int) ((radius / 2 - radius / 14) * scale), (int) ((radius / 2 - radius / 14) * scale),
+            (int) ((radius / 4 - radius / 28) * scale), (int) ((radius / 4 - radius / 28) * scale),
+            (int) ((radius / 7) * scale), (int) ((radius / 7) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((0) * scale), (int) ((0) * scale),
+            (int) ((0) * scale), (int) ((0) * scale),
+            (int) ((0) * scale), (int) ((0) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((radius / 7) * scale), (int) ((radius / 7) * scale),
+            (int) ((radius / 4 - radius / 28) * scale), (int) ((radius / 4 - radius / 28) * scale),
+            (int) ((radius / 2 - radius / 14) * scale), (int) ((radius / 2 - radius / 14) * scale)
+        };
+
+        int[] ranges = {
+            (int) ((radius / 2 + radius / 14 + 1) * scale), (int) ((radius / 2 + radius / 14 + 1) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius - 1) * scale), (int) ((radius - 1) * scale),
+            (int) ((radius + 1) * scale), (int) ((radius + 1) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius + 1) * scale), (int) ((radius + 1) * scale),
+            (int) ((radius - 1) * scale), (int) ((radius - 1) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius / 2 + radius / 14 + 1) * scale), (int) ((radius / 2 + radius / 14 + 1) * scale)
+        };
+
+        if (!"eaten".equals(this.mode)) {
+            for (int col = 0; col < offsets.length; col++) {
+                for (int i = 1; i < ranges[col]; i++) {
+                    // Répéter chaque pixel horizontalement selon le facteur d'échelle
+                    for (int x_scale = 0; x_scale < scale; x_scale++) {
+
+                        pixelWriter.setColor(top_left_corner_x + col * (int) scale + x_scale,
+                                top_left_corner_y + offsets[col] + i * (int) scale,
+                                this.couleur);
+
+                    }
+                }
             }
         }
+
         int direction = 0;
         if (this.x > this.previous_x) {
             direction = 0; // Droite
@@ -85,11 +134,50 @@ public abstract class Ghost {
 
     public void draw_ghost_moving(GraphicsContext gc) {
         PixelWriter pixelWriter = gc.getPixelWriter();
-        double top_left_corner_x = p.board_top_x + p.width / p.tab[0].length * this.interpolatedX + p.width / p.tab[0].length / 2 - radius / 2;
-        double top_left_corner_y = p.board_top_y + p.height / p.tab.length * this.interpolatedY + p.height / p.tab.length / 2 - radius / 2;
-        for (int col = 0; col < offsets.length; col++) {
-            for (int i = 1; i < ranges[col]; i++) {
-                pixelWriter.setColor((int) top_left_corner_x + col, (int) top_left_corner_y + offsets[col] + i, this.couleur);
+        double scale = this.radius / 28;
+
+        int top_left_corner_x = (int) (p.board_top_x + p.width / p.tab[0].length * this.x
+                + p.width / p.tab[0].length / 2 - radius / 2);
+        int top_left_corner_y = (int) (p.board_top_y + p.height / p.tab.length * this.y
+                + p.height / p.tab.length / 2 - radius / 2);
+        int[] offsets = {
+            (int) ((radius / 2 - radius / 14) * scale), (int) ((radius / 2 - radius / 14) * scale),
+            (int) ((radius / 4 - radius / 28) * scale), (int) ((radius / 4 - radius / 28) * scale),
+            (int) ((radius / 7) * scale), (int) ((radius / 7) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((0) * scale), (int) ((0) * scale),
+            (int) ((0) * scale), (int) ((0) * scale),
+            (int) ((0) * scale), (int) ((0) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
+            (int) ((radius / 7) * scale), (int) ((radius / 7) * scale),
+            (int) ((radius / 4 - radius / 28) * scale), (int) ((radius / 4 - radius / 28) * scale),
+            (int) ((radius / 2 - radius / 14) * scale), (int) ((radius / 2 - radius / 14) * scale)
+        };
+
+        int[] ranges = {
+            (int) ((radius / 2 + radius / 14 + 1) * scale), (int) ((radius / 2 + radius / 14 + 1) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius - 1) * scale), (int) ((radius - 1) * scale),
+            (int) ((radius + 1) * scale), (int) ((radius + 1) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius + 1) * scale), (int) ((radius + 1) * scale),
+            (int) ((radius - 1) * scale), (int) ((radius - 1) * scale),
+            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
+            (int) ((radius / 2 + radius / 14 + 1) * scale), (int) ((radius / 2 + radius / 14 + 1) * scale)
+        };
+
+        if (!("eaten".equals(this.mode))) {
+            for (int col = 0; col < offsets.length; col++) {
+                for (int i = 1; i < ranges[col]; i++) {
+                    pixelWriter.setColor((int) top_left_corner_x + col, (int) top_left_corner_y + offsets[col] + i, this.couleur);
+                }
             }
         }
         int direction = 0;
@@ -193,7 +281,7 @@ public abstract class Ghost {
         return bestMove;
     }
 
-    public void update(Vector2 pac_coords, int t, int pac_facing, Vector2 blinky_coords) {
+    public void update(Vector2 pac_coords, int t, int pac_facing, Vector2 blinky_coords, String mode) {
 
         int facing;
         if (this.x - this.previous_x < 0) {
@@ -305,8 +393,13 @@ public abstract class Ghost {
             }
             chosenMove = chooseBestMove(mooves_available, target);
         } else if ("eaten".equals(this.mode)) {
-            Vector2 target = new Vector2(8, 10);
-            chosenMove = chooseBestMove(mooves_available, target);
+            if (this.x == 10 && this.y == 10) {
+                this.mode = mode;
+            } else {
+                Vector2 target = new Vector2(10, 10);
+                chosenMove = chooseBestMove(mooves_available, target);
+            }
+
         }
 
         /* Cas où le fantôme arrive par exemple par la gauche sur un partern du type:
@@ -316,7 +409,7 @@ public abstract class Ghost {
            Obligation de revenir en arrière
          */
         if (mooves_available.size() == 0) {
-            facing = (this.facing + 180) % 360;
+            facing = (facing + 180) % 360;
             switch (facing) {
                 case 0 ->
                     chosenMove = new Vector2(1.0, 0.0);
