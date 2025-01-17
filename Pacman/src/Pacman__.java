@@ -9,12 +9,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javafx.animation.Animation;
 import javafx.scene.paint.Color;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -36,7 +33,6 @@ public class Pacman__ {
     public int height = window_height * 80 / 100;
     public int board_top_x = (window_width - width) / 2;
     public int board_top_y = (window_height - height) / 2;
-    public int score = 0;
     public int[][] tab = {
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},// 0
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},// 1
@@ -47,8 +43,8 @@ public class Pacman__ {
         {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1},// 6
         {1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1},// 7
         {1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1},// 8
-        {1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1},// 9
-        {1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1},// 10
+        {1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 2, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1},// 9
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0},// 10
         {1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1},// 11
         {1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1},// 12
         {1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1},// 13
@@ -59,7 +55,7 @@ public class Pacman__ {
         {1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1},// 18
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},// 19
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},};// 20
-    //   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
+    //   0  1  0  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
 
     public int[][] levels_phase = {
         // temp en ms de chaque phase pour chaque level
@@ -70,15 +66,19 @@ public class Pacman__ {
 
     private int iterationCount = 0;
     double epsilon = 0.9;
-    boolean game_over = false;
     Font customFont;
     String mode = "scatter";
-    int t = 0;
+    int t = -1;
     ArrayList<Ghost> List_Ghost = new ArrayList();
-    ArrayList<Buffer_Input> Input_Buffer = new ArrayList();
-
+    ArrayList<ArrayList<Buffer_Input>> Input_Buffer = new ArrayList<>();
+    Color[] Pacman_colors = {
+        new Color(1, 1, 0, 1),
+        new Color(0, 1, 0, 1),
+        new Color(1, 1, 1, 1),
+        new Color(0.50, 0.50, 0.50, 1)
+    };
     Timer timer = new Timer();
-    int point_ghost = 200;
+    Vector2[] x_y_pacs = {new Vector2(1, 1), new Vector2(19, 19), new Vector2(1, 19), new Vector2(19, 1)};
 
     private static int extraireScore(String ligne) {
         try {
@@ -93,20 +93,33 @@ public class Pacman__ {
 
     public boolean start(Stage primaryStage, int nb_de_joueur, ArrayList<Touches_joueur> touches_joueur, Runnable onGameEnd) {
         // Créer un Canvas
+        for (int i = 0; i < nb_de_joueur; i++) {
+            Input_Buffer.add(new ArrayList<>());
+        }
 
         Canvas canvas = new Canvas(window_width, window_height);
-        Pacman pac = new Pacman();
-        pac.p.List_Ghost.add(new Blinky(90,28));
-        pac.p.List_Ghost.add(new Clyde(90,28));
-        pac.p.List_Ghost.add(new Pinky(90,28));
-        pac.p.List_Ghost.add(new Inky(90,28));
+        ArrayList<Pacman> pac_List = new ArrayList();
+        for (int i = 0; i < nb_de_joueur; i++) {
+            this.List_Ghost.add(new Blinky(90, 28));
+            this.List_Ghost.add(new Clyde(90, 28));
+            this.List_Ghost.add(new Pinky(90, 28));
+            this.List_Ghost.add(new Inky(90, 28));
+            pac_List.add(new Pacman(x_y_pacs[i].x, x_y_pacs[i].y, this.Pacman_colors[i]));
+        }
+        System.out.println("pac_List.size() = " + pac_List.size());
         // Obtenir le GraphicsContext pour dessiner
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         // Ajouter le Canvas dans un conteneur
         StackPane root = new StackPane();
         root.getChildren().add(canvas);
+        root.widthProperty().addListener((observable, oldValue, newValue) -> {
+            this.window_width = newValue.intValue();
+        });
 
+        root.heightProperty().addListener((observable, oldValue, newValue) -> {
+            this.window_height = newValue.intValue();
+        });
         // Configurer la scène
         Scene scene = new Scene(root, window_width, window_height);
 
@@ -121,94 +134,115 @@ public class Pacman__ {
         }
         gc.setFont(this.customFont);
 
-        Timeline main_menu = new Timeline(new KeyFrame(Duration.millis(500), e -> {
-            gc.setFill(Color.BLACK);
-            gc.fillRect(0, 0, window_width, window_height);
-
-        }));
-
         timer.start();
-        main_menu.setCycleCount(Timeline.INDEFINITE);
-        main_menu.play();
         primaryStage.setScene(scene);
         primaryStage.show();
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().add(new KeyFrame(Duration.millis(500), (ActionEvent e) -> {
-            //System.out.println("t = " + this.t);
-            if (this.t == 0) {
-                for (Ghost g : pac.p.List_Ghost) {
-                    g.previous_mode = pac.p.mode;
+
+            if (this.t < 0) {
+                for (Ghost g : this.List_Ghost) {
+                    g.previous_mode = this.mode;
                 }
-                pac.p.mode = Determine_mode_based_on_time(timer.get_Time());
-                for (Ghost g : pac.p.List_Ghost) {
+                this.mode = Determine_mode_based_on_time(timer.get_Time());
+                for (Ghost g : this.List_Ghost) {
                     if (!"eaten".equals(g.mode)) {
-                        g.mode = pac.p.mode;
+                        g.mode = this.mode;
                     }
                 }
             }
+
             scene.setOnKeyPressed(event -> {
                 String keyPressed = event.getText().isEmpty()
                         ? event.getCode().toString()
                         : event.getText();
-                pac.p.Input_Buffer.add(new Buffer_Input(keyPressed));
 
+                if (keyPressed.equals(touches_joueur.get(0).mooves.get(0))
+                        || keyPressed.equals(touches_joueur.get(0).mooves.get(1))
+                        || keyPressed.equals(touches_joueur.get(0).mooves.get(2))
+                        || keyPressed.equals(touches_joueur.get(0).mooves.get(3))) {
+                    this.Input_Buffer.get(0).add(new Buffer_Input(keyPressed));
+                } else if (nb_de_joueur > 1 && (keyPressed.equals(touches_joueur.get(1).mooves.get(0))
+                        || keyPressed.equals(touches_joueur.get(1).mooves.get(1))
+                        || keyPressed.equals(touches_joueur.get(1).mooves.get(2))
+                        || keyPressed.equals(touches_joueur.get(1).mooves.get(3)))) {
+                    this.Input_Buffer.get(1).add(new Buffer_Input(keyPressed));
+                } else if (nb_de_joueur > 2 && (keyPressed.equals(touches_joueur.get(2).mooves.get(0))
+                        || keyPressed.equals(touches_joueur.get(2).mooves.get(1))
+                        || keyPressed.equals(touches_joueur.get(2).mooves.get(2))
+                        || keyPressed.equals(touches_joueur.get(2).mooves.get(3)))) {
+                    this.Input_Buffer.get(2).add(new Buffer_Input(keyPressed));
+                } else if (nb_de_joueur > 3 && (keyPressed.equals(touches_joueur.get(3).mooves.get(0))
+                        || keyPressed.equals(touches_joueur.get(3).mooves.get(1))
+                        || keyPressed.equals(touches_joueur.get(3).mooves.get(2))
+                        || keyPressed.equals(touches_joueur.get(3).mooves.get(3)))) {
+                    this.Input_Buffer.get(3).add(new Buffer_Input(keyPressed));
+                }
             });
 
-            pac.update();
-
-            for (Ghost g : pac.p.List_Ghost) {
-                if ("eaten".equals(g.mode)) {
-
-                    if (!g.next_positions_while_eaten.isEmpty()) {
-                        g.next_positions_while_eaten.clear();
-                        g.animation_eating_count = 1;
-                    }
-
-                    for (int i = 0; i < 2; i++) {
-                        g.next_positions_while_eaten.add(new Vector2(g.x, g.y));
-                        g.update(pac.coords, t, pac.facing, new Vector2(pac.p.List_Ghost.get(0).x, pac.p.List_Ghost.get(0).y), pac.p.mode);
-                    }
-                } else {
-                    g.update(pac.coords, t, pac.facing, new Vector2(pac.p.List_Ghost.get(0).x, pac.p.List_Ghost.get(0).y), pac.p.mode);
-                }
-                pac.p.tab[g.y][g.x] = (pac.p.tab[g.y][g.x] == 0) ? 3 : (pac.p.tab[g.y][g.x] == 2 ? 4 : pac.p.tab[g.y][g.x]);
-                pac.p.tab[g.previous_y][g.previous_x] = (pac.p.tab[g.previous_y][g.previous_x] == 3) ? 0
-                        : (pac.p.tab[g.previous_y][g.previous_x] == 4 ? 2 : pac.p.tab[g.previous_y][g.previous_x]);
+            // On met à jour la position de(s) pacman(s)
+            for (Pacman pacman : pac_List) {
+                pacman.update();
             }
 
-            //if (pac.p.tab[blinky.y][blinky.x] == 0) {pac.p.tab[blinky.y][blinky.x] =  3;} else {pac.p.tab[blinky.y][blinky.x] = 4;}
-            //if (pac.p.tab[blinky.previous_y][blinky.previous_x] == 3) {pac.p.tab[blinky.y][blinky.x] =  0;} else { pac.p.tab[blinky.previous_y][blinky.previous_x] = 2;}
+            for (int i = 0; i < this.List_Ghost.size(); i++) {
+                Ghost ghost = this.List_Ghost.get(i);
+                Pacman pac = pac_List.get((int) i / 4);
+                if ("eaten".equals(ghost.mode)) {
+                    // Dans le cas où le fantôme a déjà été mangé on reset le tableau d'animation des yeux ainsi que le compteur
+                    if (!ghost.next_positions_while_eaten.isEmpty()) {
+                        ghost.next_positions_while_eaten.clear();
+                        ghost.animation_eating_count = 1;
+                    }
+
+                    for (int j = 0; j < 2; j++) {
+                        ghost.next_positions_while_eaten.add(new Vector2(ghost.x, ghost.y));
+                        ghost.update(pac.coords, t, pac.facing, new Vector2(this.List_Ghost.get(0).x, this.List_Ghost.get(0).y), this.mode);
+                    }
+                } else {
+                    ghost.update(pac.coords, t, pac.facing, new Vector2(this.List_Ghost.get(0).x, this.List_Ghost.get(0).y), this.mode);
+                }
+                this.tab[ghost.y][ghost.x] = (this.tab[ghost.y][ghost.x] == 0) ? 3 : (this.tab[ghost.y][ghost.x] == 2 ? 4 : this.tab[ghost.y][ghost.x]);
+                this.tab[ghost.previous_y][ghost.previous_x] = (this.tab[ghost.previous_y][ghost.previous_x] == 3) ? 0
+                        : (this.tab[ghost.previous_y][ghost.previous_x] == 4 ? 2 : this.tab[ghost.previous_y][ghost.previous_x]);
+            }
+
             iterationCount = 0;
-            pac.mouthOpening[0] = true;
-            pac.mouthAngle[0] = 0;
+            for (Pacman pac : pac_List) {
+                pac.mouthOpening[0] = true;
+                pac.mouthAngle[0] = 0;
+            }
+
             Timeline timeline_animation = new Timeline();
             timeline_animation.getKeyFrames().add(new KeyFrame(Duration.millis(10), d -> {
-                pac.p.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop);
-                // pac.p.drawNumbers(gc);
-                pac.draw_vies(gc);
+                this.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop_f, pac_List);
 
-                pac.interpolatedX = pac.previous_x + (pac.coords.x - pac.previous_x) * (iterationCount / 50.0);
-                pac.interpolatedY = pac.previous_y + (pac.coords.y - pac.previous_y) * (iterationCount / 50.0);
-                //System.out.println("1 - interpolatedY = " + pac.interpolatedY + " && interpolatedX = " + pac.interpolatedX);
+                for (int i = 0; i < pac_List.size(); i++) {
+                    Pacman pac = pac_List.get(i);
+                    pac.draw_vies(gc, i);
+                    pac.interpolatedX = pac.previous_x + (pac.coords.x - pac.previous_x) * (iterationCount / 50.0);
+                    pac.interpolatedY = pac.previous_y + (pac.coords.y - pac.previous_y) * (iterationCount / 50.0);
+                    pac.draw_Pacman(gc);
 
-                pac.draw_Pacman(gc);
-                if (pac.p.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] == 0 || pac.p.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] == 3) {
-                    pac.p.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] = 2;
-                    pac.p.score += 10;
-                } else if (pac.p.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] == 5) {
-                    pac.p.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] = 2;
-                    pac.p.score += 50;
-                    for (Ghost ghost : pac.p.List_Ghost) {
-                        ghost.couleur = new Color(0, 0, 1, 1);
-                        ghost.mode = "frightened";
+                    if (this.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] == 0 || this.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] == 3) {
+                        this.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] = 2;
+                        pac.score += 10;
+                    } else if (this.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] == 5) {
+                        this.tab[(int) pac.interpolatedY][(int) pac.interpolatedX] = 2;
+                        pac.score += 50;
+                        for (Ghost ghost : this.List_Ghost) {
+                            ghost.couleur = new Color(0, 0, 1, 1);
+                            ghost.mode = "frightened";
+                        }
+                        this.t = 15;
+                        pac.point_ghost = 200;
+                        timer.Stop_Timer();
                     }
-                    this.t = 15;
-                    pac.p.point_ghost = 200;
-                    timer.Stop_Timer();
                 }
-                for (Ghost ghost : pac.p.List_Ghost) {
-                    if ("frightened".equals(ghost.mode) && this.t < 5 && this.t != 0) {
-                        if (pac.p.timer.get_Time() % 400 < 200) {
+
+                for (Ghost ghost : this.List_Ghost) {
+                    if ("frightened".equals(ghost.mode) && this.t < 5 && this.t != -1) {
+                        if (this.timer.get_Time() % 400 < 200) {
                             ghost.couleur = new Color(0.9, 0.9, 0.9, 1);
 
                         } else {
@@ -218,7 +252,7 @@ public class Pacman__ {
                     }
                 }
 
-                for (Ghost ghost : pac.p.List_Ghost) {
+                for (Ghost ghost : this.List_Ghost) {
                     if ("eaten".equals(ghost.mode) && !ghost.next_positions_while_eaten.isEmpty()) {
                         for (int i = 1; i < 3; i++) {
                             if (ghost.animation_eating_count <= 50) {
@@ -238,127 +272,194 @@ public class Pacman__ {
                     }
                 }
                 iterationCount++;
-                boolean in_collision = false;
-                for (Ghost ghost : pac.p.List_Ghost) {
-                    if (check_collision(pac, ghost)) {
-                        in_collision = true;
+
+                boolean[] in_collision = new boolean[4];
+                for (int i = 0; i < pac_List.size(); i++) {
+                    Pacman pac = pac_List.get(i);
+                    boolean in_collision_with_pac = false;
+                    for (Ghost ghost : this.List_Ghost) {
+                        if (check_collision(pac, ghost)) {
+                            in_collision_with_pac = true;
+                        }
                     }
+                    in_collision[i] = in_collision_with_pac;
+                }
+                for (int i = 0; i < pac_List.size(); i++) {
+                    Pacman pac = pac_List.get(i);
+                    pac.direction_changed(this.Input_Buffer.get(i), touches_joueur.get(i));
+                    this.Input_Buffer.get(i).removeIf(bi -> !bi.decreament_lifespan()); // Enlève tout les élément dont le cycle de vie a atteint 0 & décrémente les autres cycles 
+
                 }
 
-                //for (Buffer_Input bi : pac.p.Input_Buffer) {
-                //  System.out.println("bi.Input = " + bi.Input + " bi.Lifespan = " + bi.Lifespan);
-                //}
-                pac.direction_changed(pac.p.Input_Buffer, touches_joueur.get(0));
-                pac.p.Input_Buffer.removeIf(bi -> !bi.decreament_lifespan()); // Enlève tout les élément dont le cycle de vie a atteint 0 & décrémente les autres cycles 
-
-                if (in_collision) {
-                    for (Ghost ghost : pac.p.List_Ghost) {
-                        if (check_collision(pac, ghost)) {
-                            if ("chase".equals(ghost.mode) || "scatter".equals(ghost.mode)) {
-                                timeline_animation.pause();
-                                timeline.pause();
-                                int[] temp = {30};
-                                Timeline tempAnimation = new Timeline();
-                                tempAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(0.05), g -> {
-                                    if (temp[0] > 0) {
-                                        pac.p.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop);
-                                        pac.draw_vies(gc);
-                                        pac.draw_dying_animation(gc, temp);
-                                        for (Ghost other_ghost : pac.p.List_Ghost) {
-                                            other_ghost.draw_ghost_moving(gc);
-                                        }
-                                        temp[0]--;
-                                    } else {
-                                        tempAnimation.stop(); // Arrêtez directement le Timeline
-                                        timeline_animation.play();
-                                        timeline.play();
-                                        pac.vies--;
-                                        pac.reset();
-                                        for (Ghost other_ghost : pac.p.List_Ghost) {
-                                            other_ghost.reset();
-                                        }
-                                        for (int[] tab1 : pac.p.tab) {
-                                            for (int j = 0; j < pac.p.tab[0].length; j++) {
-                                                if (tab1[j] == 3) {
-                                                    tab1[j] = 0;
-                                                }
-                                                if (tab1[j] == 4) {
-                                                    tab1[j] = 2;
-                                                }
-                                            }
-                                        }
-                                        if (pac.vies == 0) {
-                                            timeline.stop();
-                                            timeline_animation.stop();
-                                            pac.p.update_Highscore();
-                                            onGameEnd.run();
-                                        }
-                                    }
-                                }));
-                                tempAnimation.setCycleCount(Timeline.INDEFINITE);
-                                tempAnimation.play();
-                                break;
-                            } else if ("frightened".equals(ghost.mode)) {
-                                Text s200 = new Text("" + pac.p.point_ghost);
-                                pac.p.score += pac.p.point_ghost;
-                                timeline_animation.pause();
-                                timeline.pause();
-                                int[] temp = {30}; // Compteur pour les frames
-                                Timeline tempAnimation = new Timeline();
-                                tempAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(0.05), g -> {
-                                    if (temp[0] > 0) {
-                                        pac.p.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop);
-                                        gc.setFill(temp[0] % 4 == 0 ? Color.WHITE : Color.BLUE);
-                                        gc.fillText("" + pac.p.point_ghost, board_top_x + pac.coords.x * width / this.tab[0].length + width / this.tab[0].length / 2 - s200.getBoundsInLocal().getWidth(),
-                                                board_top_y + pac.coords.y * height / this.tab.length + height / this.tab.length / 2 - s200.getBoundsInLocal().getHeight());
-                                        pac.draw_vies(gc);
-                                        for (Ghost other_ghost : pac.p.List_Ghost) {
-                                            if (ghost != other_ghost) {
+                for (int i = 0; i < pac_List.size(); i++) {
+                    Pacman pac = pac_List.get(i);
+                    if (in_collision[i]) {
+                        for (Ghost ghost : this.List_Ghost) {
+                            if (check_collision(pac, ghost)) {
+                                if ("chase".equals(ghost.mode) || "scatter".equals(ghost.mode)) {
+                                    timeline_animation.pause();
+                                    timeline.pause();
+                                    int[] temp = {30};
+                                    int k = i;
+                                    Timeline tempAnimation = new Timeline();
+                                    tempAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(0.05), g -> {
+                                        if (temp[0] > 0) {
+                                            this.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop_f, pac_List);
+                                            pac.draw_vies(gc, k);
+                                            pac.draw_dying_animation(gc, temp);
+                                            for (Ghost other_ghost : pac.p.List_Ghost) {
                                                 other_ghost.draw_ghost_moving(gc);
                                             }
-                                        }
+                                            temp[0]--;
+                                        } else {
+                                            tempAnimation.stop(); // Arrêtez directement le Timeline
+                                            timeline_animation.play();
+                                            timeline.play();
+                                            pac.vies--;
+                                            pac.reset();
+                                            for (int j = 0; j < this.List_Ghost.size(); j++) {
+                                                if (j >= (4 * k) && j < (4 * (k + 1))) {
+                                                    this.List_Ghost.get(j).reset();
+                                                }
+                                            }
+                                            for (int[] tab1 : this.tab) {
+                                                for (int j = 0; j < this.tab[0].length; j++) {
+                                                    if (tab1[j] == 3) {
+                                                        tab1[j] = 0;
+                                                    }
+                                                    if (tab1[j] == 4) {
+                                                        tab1[j] = 2;
+                                                    }
+                                                }
+                                            }
+                                            if (pac.vies == 0) {
+                                                timeline.stop();
+                                                timeline_animation.stop();
+                                                int max = -1;
+                                                int index_winner = 0;
+                                                for (int l = 0; l < pac_List.size(); l++) {
+                                                    Pacman otherpac = pac_List.get(l);
+                                                    if (otherpac != pac) {
+                                                        if (Math.max(max, otherpac.score) == otherpac.score) {
+                                                            index_winner = l;
+                                                        }
+                                                        max = Math.max(max, otherpac.score);
+                                                    }
+                                                }
+                                                pac.p.update_Highscore(max);
 
-                                        temp[0]--;
-                                    } else {
-                                        tempAnimation.stop(); // Arrêtez directement le Timeline
-                                        timeline_animation.play();
-                                        timeline.play();
-                                        pac.p.point_ghost *= 2;
-                                        ghost.mode = "eaten";
-                                        if (ghost.getClass() == Blinky.class) {
-                                            ghost.couleur = new Color(1, 0, 0, 0.8);
-                                        } else if (ghost.getClass() == Clyde.class) {
-                                            ghost.couleur = new Color(1, 0.5, 0, 0.8);
-                                        } else if (ghost.getClass() == Pinky.class) {
-                                            ghost.couleur = new Color(0.966, 0.69, 0.95, 0.8);
-                                        } else if (ghost.getClass() == Inky.class) {
-                                            ghost.couleur = new Color(0.529, 1, 0.988, 0.8);
+                                                Timeline winnerAnimation = new Timeline();
+                                                int[] temp2 = {50}; // Compteur pour les frames
+                                                int l = index_winner;
+                                                winnerAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(0.05), h -> {
+                                                    Text t = null;
+                                                    if (nb_de_joueur == 1) {
+                                                        t = new Text("Game over");
+                                                    } else {
+                                                        t = new Text("Pacman " + l + " remporte la partie");
+                                                    }
+                                                    t.setFont(customFont);
+                                                    if (temp2[0] > 0) {
+                                                        this.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop_f, pac_List);
+                                                        pac.draw_vies(gc, k);
+                                                        for (Ghost other_ghost : pac.p.List_Ghost) {
+                                                            if (ghost != other_ghost) {
+                                                                other_ghost.draw_ghost_moving(gc);
+                                                            }
+                                                        }
+                                                        if (temp2[0] % 5 == 0) {
+                                                            gc.setFill(Color.WHITE);
+                                                        } else {
+                                                            if (nb_de_joueur == 1) {
+                                                                gc.setFill(Color.RED);
+                                                            } else {
+                                                                gc.setFill(pac_List.get(l).pacman_color);
+                                                            }
+                                                        }
+                                                        if (nb_de_joueur == 1) {
+                                                            gc.fillText("Game over", width / 2 + t.getBoundsInLocal().getWidth() / 4, height / 2 + t.getBoundsInLocal().getHeight());
+                                                        } else {
+                                                            gc.fillText("Pacman " + (l + 1) + " remporte la partie", width / 2 - t.getBoundsInLocal().getWidth() / 5, height / 2 + t.getBoundsInLocal().getHeight());
+                                                        }
+                                                        temp2[0]--;
+                                                    } else {
+                                                        winnerAnimation.stop();
+                                                        onGameEnd.run();
+                                                    }
+
+                                                }));
+                                                winnerAnimation.setCycleCount(Timeline.INDEFINITE);
+                                                winnerAnimation.play();
+
+                                            }
                                         }
-                                        pac.p.tab[ghost.y][ghost.x] = pac.p.tab[ghost.y][ghost.x] == 3 ? 0 : 2;
-                                    }
-                                }));
-                                tempAnimation.setCycleCount(Timeline.INDEFINITE);
-                                tempAnimation.play();
+                                    }));
+                                    tempAnimation.setCycleCount(Timeline.INDEFINITE);
+                                    tempAnimation.play();
+                                    break;
+                                } else if ("frightened".equals(ghost.mode)) {
+                                    int k = i;
+                                    Text s200 = new Text("" + pac.point_ghost);
+                                    pac.score += pac.point_ghost;
+                                    timeline_animation.pause();
+                                    timeline.pause();
+                                    int[] temp = {30}; // Compteur pour les frames
+                                    Timeline tempAnimation = new Timeline();
+                                    tempAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(0.05), g -> {
+                                        if (temp[0] > 0) {
+                                            this.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop_f, pac_List);
+                                            gc.setFill(temp[0] % 4 == 0 ? Color.WHITE : Color.BLUE);
+                                            gc.fillText("" + pac.point_ghost, board_top_x + pac.coords.x * width / this.tab[0].length + width / this.tab[0].length / 2 - s200.getBoundsInLocal().getWidth(),
+                                                    board_top_y + pac.coords.y * height / this.tab.length + height / this.tab.length / 2 - s200.getBoundsInLocal().getHeight());
+                                            pac.draw_vies(gc, k);
+                                            for (Ghost other_ghost : pac.p.List_Ghost) {
+                                                if (ghost != other_ghost) {
+                                                    other_ghost.draw_ghost_moving(gc);
+                                                }
+                                            }
+
+                                            temp[0]--;
+                                        } else {
+                                            tempAnimation.stop(); // Arrêtez directement le Timeline
+                                            timeline_animation.play();
+                                            timeline.play();
+                                            pac.point_ghost *= 2;
+                                            ghost.mode = "eaten";
+                                            if (ghost.getClass() == Blinky.class) {
+                                                ghost.couleur = new Color(1, 0, 0, 0.8);
+                                            } else if (ghost.getClass() == Clyde.class) {
+                                                ghost.couleur = new Color(1, 0.5, 0, 0.8);
+                                            } else if (ghost.getClass() == Pinky.class) {
+                                                ghost.couleur = new Color(0.966, 0.69, 0.95, 0.8);
+                                            } else if (ghost.getClass() == Inky.class) {
+                                                ghost.couleur = new Color(0.529, 1, 0.988, 0.8);
+                                            }
+                                            pac.p.tab[ghost.y][ghost.x] = pac.p.tab[ghost.y][ghost.x] == 3 ? 0 : 2;
+                                        }
+                                    }));
+                                    tempAnimation.setCycleCount(Timeline.INDEFINITE);
+                                    tempAnimation.play();
+                                }
+
                             }
 
                         }
-
                     }
                 }
-
-                //System.out.println("iterationCount = " + iterationCount);
             }));
             timeline_animation.setCycleCount(50);
             timeline_animation.play();
+
             boolean at_least_one_ghost_frightened = false;
-            for (Ghost ghost : pac.p.List_Ghost) {
+            for (Ghost ghost : this.List_Ghost) {
                 at_least_one_ghost_frightened |= "frightened".equals(ghost.mode);
             }
+
             if (at_least_one_ghost_frightened) {
                 if (t > 0) {
                     this.t--;
                 } else {
-                    for (Ghost ghost : pac.p.List_Ghost) {
+                    for (Ghost ghost : this.List_Ghost) {
                         if (ghost.getClass() == Blinky.class) {
                             ghost.couleur = new Color(1, 0, 0, 0.8);
                         } else if (ghost.getClass() == Clyde.class) {
@@ -369,11 +470,14 @@ public class Pacman__ {
                             ghost.couleur = new Color(0.529, 1, 0.988, 0.8);
                         }
                     }
-
+                    this.t--;
                     timer.start_again();
+                    for (Pacman pac : pac_List) {
+                        pac.point_ghost = 200;
+                    }
                 }
-            } else {
-                for (Ghost ghost : pac.p.List_Ghost) {
+            } else if (t > 0) {
+                for (Ghost ghost : this.List_Ghost) {
                     if (ghost.getClass() == Blinky.class) {
                         ghost.couleur = new Color(1, 0, 0, 0.8);
                     } else if (ghost.getClass() == Clyde.class) {
@@ -385,13 +489,61 @@ public class Pacman__ {
                     }
                 }
                 timer.start_again();
+                this.t = -1;
+
             }
 
-            if (pac.p.no_more_coins()) {
+            if (this.no_more_coins()) {
                 timeline.stop();
                 timeline_animation.stop();
-                pac.p.update_Highscore();
-                onGameEnd.run();
+                int max = -1;
+                int index_winner = -1;
+                for (int i = 0; i < pac_List.size(); i++) {
+                    Pacman pac = pac_List.get(i);
+                    if (Math.max(max, pac.score) == pac.score) {
+                        index_winner = i;
+                    }
+                    max = Math.max(max, pac.score);
+                }
+                this.update_Highscore(max);
+                Pacman pac = pac_List.get(index_winner);
+                Timeline winnerAnimation = new Timeline();
+                int[] temp2 = {50}; // Compteur pour les frames
+                int l = index_winner;
+                winnerAnimation.getKeyFrames().add(new KeyFrame(Duration.seconds(0.05), h -> {
+                    Text t = null;
+                    if (nb_de_joueur == 1) {
+                        t = new Text("Victoire!");
+                    } else {
+                        t = new Text("Pacman " + l + " remporte la partie");
+                    }
+                    t.setFont(customFont);
+                    if (temp2[0] > 0) {
+                        this.drawShapes(gc, nb_de_joueur, timer.get_Time(), timer.timeStop_f, pac_List);
+                        pac.draw_vies(gc, l);
+                        for (Ghost ghost : pac.p.List_Ghost) {
+                            ghost.draw_ghost_moving(gc);
+                        }
+                        if (temp2[0] % 5 == 0) {
+                            gc.setFill(Color.WHITE);
+                        } else {
+                            gc.setFill(pac_List.get(l).pacman_color);
+                        }
+                        if (nb_de_joueur == 1) {
+                            gc.fillText("Victoire!", width / 2 + t.getBoundsInLocal().getWidth() / 2, height / 2 + t.getBoundsInLocal().getHeight());
+                        } else {
+                            gc.fillText("Pacman " + (l + 1) + " remporte la partie", width / 2 - t.getBoundsInLocal().getWidth() / 5, height / 2 + t.getBoundsInLocal().getHeight());
+                        }
+                        temp2[0]--;
+                    } else {
+                        winnerAnimation.stop();
+                        onGameEnd.run();
+                    }
+
+                }));
+                winnerAnimation.setCycleCount(Timeline.INDEFINITE);
+                winnerAnimation.play();
+
             }
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
@@ -401,11 +553,12 @@ public class Pacman__ {
         return true;
     }
 
-    public void drawShapes(GraphicsContext gc, int nb_de_joueur, long duration, long timestop) {
+    public void drawShapes(GraphicsContext gc, int nb_de_joueur, long duration, long timestop, ArrayList<Pacman> pac_List) {
         // Remplir l'arrière-plan   
         gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, window_width, window_height);
-
+        gc.fillRect(0, 0, this.window_width, this.window_height);
+        gc.setFill(Color.DARKSALMON);
+        gc.fillRect(board_top_x + width / tab[0].length * 10, board_top_y + height / tab.length * 9 + height / tab.length / 2.5, width / tab[0].length, height / tab.length / 5);
         gc.setFill(Color.WHITE);
         gc.setStroke(Color.rgb(0, 0, 255));
         for (int i = 0; i < tab.length; i++) {
@@ -433,8 +586,8 @@ public class Pacman__ {
             }
 
         }
-        draw_points(gc, score);
-        draw_high_score(gc, score);
+        draw_points(gc, pac_List);
+        draw_high_score(gc, pac_List);
         draw_mode(gc, duration, timestop);
         //draw_nb_joueur(gc, nb_de_joueur);
         //draw_ghost(gc, 300, 50);
@@ -458,33 +611,42 @@ public class Pacman__ {
         gc.fillText(txt, this.board_top_x + this.width / 4 - text.getBoundsInLocal().getWidth(), this.board_top_y - height / 25 - text.getBoundsInLocal().getHeight() / 2);
     }
 
-    public void draw_points(GraphicsContext gc, int score) {
+    public void draw_points(GraphicsContext gc, ArrayList<Pacman> pac_List) {
         gc.setStroke(Color.rgb(0, 0, 255));
         //gc.strokeRect(board_top_x / 4, board_top_y / 4, 150, 50);
-        Text text = new Text("" + score);
+
         Text text2 = new Text("1UP");
-        text.setFont(javafx.scene.text.Font.font("Arial", 20));
-        gc.fillText("Score : " + score, board_top_x / 4 + 150, board_top_y / 2 + 50 / 2 + text.getBoundsInLocal().getHeight() / 4);
+        for (int i = 0; i < pac_List.size(); i++) {
+            Pacman pac = pac_List.get(i);
+            Text text = new Text("" + pac.score);
+            text.setFont(javafx.scene.text.Font.font("Arial", 20));
+            gc.setFill(pac.pacman_color);
+            gc.fillText("Score : " + pac.score, board_top_x / 4 + 100 + (i % 2 == 1 ? 175 : 0), board_top_y / 2 + 50 / 2 + text.getBoundsInLocal().getHeight() / 4 + (i > 1 ? 40 : 0));
+        }
 
         // Apparition/Disparition de 1UP à une cadence de 400ms pour obtenir le même effet que sur le jeu originel
         if ((timer.get_Time() % 800 < 400)) {
-            gc.fillText("1UP", board_top_x / 4 + 150, board_top_y / 2 + text2.getBoundsInLocal().getHeight() / 4);
+            gc.setFill(Color.WHITE);
+            gc.fillText("1UP", board_top_x / 4 + 100, board_top_y / 2 + text2.getBoundsInLocal().getHeight() / 4);
         }
 
     }
 
-    public void draw_high_score(GraphicsContext gc, int score) {
+    public void draw_high_score(GraphicsContext gc, ArrayList<Pacman> pac_List) {
         gc.setStroke(Color.rgb(0, 0, 255));
-        String cheminFichier = "./Users_Highscore/Highscores.txt";
+        gc.setFill(Color.WHITE);
+        String cheminFichier = "./Users_Highscore/Highscores3.txt";
         String[] parties = null;
+
         try {
             List<String> lignes = Files.readAllLines(Paths.get(cheminFichier));
             parties = lignes.get(0).split(" ");
         } catch (IOException ex) {
             Logger.getLogger(Pacman__.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (score < Integer.parseInt(parties[1])) {
-            score = Integer.parseInt(parties[1]);
+        int score = Integer.parseInt(parties[1]);
+        for (Pacman pac : pac_List) {
+            score = Math.max(pac.score, score);
         }
         Text text = new Text("" + score);
         Text text2 = new Text("HIGH SCORE");
@@ -493,9 +655,15 @@ public class Pacman__ {
     }
 
     public void draw_mode(GraphicsContext gc, long duration, long timestop) {
-        if ("frightened".equals(this.mode)) {
-            duration -= timestop;
+        gc.setFill(Color.WHITE);
+        boolean at_least_one_ghost_frightened = false;
+        for (Ghost ghost : this.List_Ghost) {
+            at_least_one_ghost_frightened |= "frightened".equals(ghost.mode);
         }
+        if (at_least_one_ghost_frightened) {
+            duration = timestop;
+        }
+
         long total_time_cycle = 0;
         for (int i = 1; i < 8; i++) {
             total_time_cycle += levels_phase[0][i];
@@ -516,14 +684,6 @@ public class Pacman__ {
 
     public boolean check_collision(Pacman a, Ghost b) {
         return (abs(a.interpolatedX - b.interpolatedX) + abs(a.interpolatedY - b.interpolatedY)) < epsilon;
-    }
-
-    public void reset(Pacman a, Ghost b, Ghost c, Ghost d, Ghost e) {
-        a = new Pacman();
-        b = new Blinky(90,28);
-        c = new Clyde(90,28);
-        d = new Pinky(90,28);
-        e = new Inky(90,28);
     }
 
     public String Determine_mode_based_on_time(long duration) {
@@ -557,14 +717,14 @@ public class Pacman__ {
         return No_more_coins;
     }
 
-    public void update_Highscore() {
+    public void update_Highscore(int score) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         String dateFormatee = LocalDateTime.now().format(formatter);
 
         String nomUtilisateur = System.getProperty("user.name");
 
-        String cheminFichier = "./Users_Highscore/Highscores.txt";
-        String contenu = "- " + this.score + " par " + nomUtilisateur + " réalisé le : " + dateFormatee;
+        String cheminFichier = "./Users_Highscore/Highscores3.txt";
+        String contenu = "- " + score + " par " + nomUtilisateur + " réalisé le : " + dateFormatee;
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(cheminFichier, true))) {
             writer.write(contenu);
@@ -593,5 +753,4 @@ public class Pacman__ {
             Logger.getLogger(Pacman__.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }

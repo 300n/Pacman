@@ -53,11 +53,8 @@ public abstract class Ghost {
         }
     }
 
-    public void draw_ghost(GraphicsContext gc) {
+    public void draw_ghost(GraphicsContext gc, int scale) {
         PixelWriter pixelWriter = gc.getPixelWriter();
-
-        double scale = this.radius / 28;
-
         int top_left_corner_x = (int) (p.board_top_x + p.width / p.tab[0].length * this.x
                 + p.width / p.tab[0].length / 2 - radius / 2);
         int top_left_corner_y = (int) (p.board_top_y + p.height / p.tab.length * this.y
@@ -98,11 +95,11 @@ public abstract class Ghost {
         if (!"eaten".equals(this.mode)) {
             for (int col = 0; col < offsets.length; col++) {
                 for (int i = 1; i < ranges[col]; i++) {
-                    // Répéter chaque pixel horizontalement selon le facteur d'échelle
+                    // Répéter chaque pixel horizontal5ement selon le facteur d'échelle
                     for (int x_scale = 0; x_scale < scale; x_scale++) {
 
                         pixelWriter.setColor(top_left_corner_x + col * (int) scale + x_scale,
-                                top_left_corner_y + offsets[col] + i * (int) scale,
+                                top_left_corner_y + offsets[col] + i,
                                 this.couleur);
 
                     }
@@ -120,58 +117,29 @@ public abstract class Ghost {
         } else if (this.y < this.previous_y) {
             direction = 90; // Haut
         }
-        switch (direction) {
+        switch (this.facing) {
             case 0 ->
-                draw_ghost_eyes_looking_left(gc, top_left_corner_x, top_left_corner_y);
+                draw_ghost_eyes_looking_left(gc, top_left_corner_x, top_left_corner_y, scale);
             case 180 ->
-                draw_ghost_eyes_looking_right(gc, top_left_corner_x, top_left_corner_y);
+                draw_ghost_eyes_looking_right(gc, top_left_corner_x, top_left_corner_y, scale);
             case 270 ->
-                draw_ghost_eyes_looking_down(gc, top_left_corner_x, top_left_corner_y);
+                draw_ghost_eyes_looking_down(gc, top_left_corner_x, top_left_corner_y, scale);
             default ->
-                draw_ghost_eyes_looking_up(gc, top_left_corner_x, top_left_corner_y);
+                draw_ghost_eyes_looking_up(gc, top_left_corner_x, top_left_corner_y, scale);
         }
     }
 
     public void draw_ghost_moving(GraphicsContext gc) {
         PixelWriter pixelWriter = gc.getPixelWriter();
-        double scale = this.radius / 28;
-
-        int top_left_corner_x = (int) (p.board_top_x + p.width / p.tab[0].length * this.x
+        int top_left_corner_x = (int) (p.board_top_x + p.width / p.tab[0].length * this.interpolatedX
                 + p.width / p.tab[0].length / 2 - radius / 2);
-        int top_left_corner_y = (int) (p.board_top_y + p.height / p.tab.length * this.y
+        int top_left_corner_y = (int) (p.board_top_y + p.height / p.tab.length * this.interpolatedY
                 + p.height / p.tab.length / 2 - radius / 2);
-        int[] offsets = {
-            (int) ((radius / 2 - radius / 14) * scale), (int) ((radius / 2 - radius / 14) * scale),
-            (int) ((radius / 4 - radius / 28) * scale), (int) ((radius / 4 - radius / 28) * scale),
-            (int) ((radius / 7) * scale), (int) ((radius / 7) * scale),
-            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
-            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
-            (int) ((0) * scale), (int) ((0) * scale),
-            (int) ((0) * scale), (int) ((0) * scale),
-            (int) ((0) * scale), (int) ((0) * scale),
-            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
-            (int) ((radius / 14) * scale), (int) ((radius / 14) * scale),
-            (int) ((radius / 7) * scale), (int) ((radius / 7) * scale),
-            (int) ((radius / 4 - radius / 28) * scale), (int) ((radius / 4 - radius / 28) * scale),
-            (int) ((radius / 2 - radius / 14) * scale), (int) ((radius / 2 - radius / 14) * scale)
-        };
-
-        int[] ranges = {
-            (int) ((radius / 2 + radius / 14 + 1) * scale), (int) ((radius / 2 + radius / 14 + 1) * scale),
-            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
-            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
-            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
-            (int) ((radius - 1) * scale), (int) ((radius - 1) * scale),
-            (int) ((radius + 1) * scale), (int) ((radius + 1) * scale),
-            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
-            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
-            (int) ((radius + 1) * scale), (int) ((radius + 1) * scale),
-            (int) ((radius - 1) * scale), (int) ((radius - 1) * scale),
-            (int) ((radius * 3 / 4 + radius / 7) * scale), (int) ((radius * 3 / 4 + radius / 7) * scale),
-            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
-            (int) ((radius * 3 / 4) * scale), (int) ((radius * 3 / 4) * scale),
-            (int) ((radius / 2 + radius / 14 + 1) * scale), (int) ((radius / 2 + radius / 14 + 1) * scale)
-        };
+        int[] offsets = {radius / 2 - radius / 14, radius / 2 - radius / 14, radius / 4 - radius / 28, radius / 4 - radius / 28, radius / 7, radius / 7, radius / 14, radius / 14, radius / 14, radius / 14,
+            0, 0, 0, 0, 0, 0, 0, 0, radius / 14, radius / 14, radius / 14, radius / 14, radius / 7, radius / 7, radius / 4 - radius / 28, radius / 4 - radius / 28, radius / 2 - radius / 14, radius / 2 - radius / 14};
+        int[] ranges = {radius / 2 + radius / 14 + 1, radius / 2 + radius / 14 + 1, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius - 1, radius - 1, radius + 1,
+            radius + 1, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7, radius + 1, radius + 1, radius - 1, radius - 1, radius * 3 / 4 + radius / 7, radius * 3 / 4 + radius / 7,
+            radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius * 3 / 4, radius / 2 + radius / 14 + 1, radius / 2 + radius / 14 + 1};
 
         if (!("eaten".equals(this.mode))) {
             for (int col = 0; col < offsets.length; col++) {
@@ -192,58 +160,58 @@ public abstract class Ghost {
         }
         switch (direction) {
             case 0 ->
-                draw_ghost_eyes_looking_left(gc, (int) top_left_corner_x, (int) top_left_corner_y);
+                draw_ghost_eyes_looking_left(gc, (int) top_left_corner_x, (int) top_left_corner_y, 1);
             case 180 ->
-                draw_ghost_eyes_looking_right(gc, (int) top_left_corner_x, (int) top_left_corner_y);
+                draw_ghost_eyes_looking_right(gc, (int) top_left_corner_x, (int) top_left_corner_y, 1);
             case 270 ->
-                draw_ghost_eyes_looking_down(gc, (int) top_left_corner_x, (int) top_left_corner_y);
+                draw_ghost_eyes_looking_down(gc, (int) top_left_corner_x, (int) top_left_corner_y, 1);
             default ->
-                draw_ghost_eyes_looking_up(gc, (int) top_left_corner_x, (int) top_left_corner_y);
+                draw_ghost_eyes_looking_up(gc, (int) top_left_corner_x, (int) top_left_corner_y, 1);
         }
     }
 
-    public void draw_ghost_eyes_looking_left(GraphicsContext gc, int x, int y) {
+    public void draw_ghost_eyes_looking_left(GraphicsContext gc, int x, int y, int scale) {
         gc.setFill(Color.WHITE);
-        gc.fillRect(x + 6, y + 8, 8, 4);
-        gc.fillRect(x + 8, y + 6, 4, 8);
-        gc.fillRect(x + 18, y + 8, 8, 4);
-        gc.fillRect(x + 20, y + 6, 4, 8);
+        gc.fillRect(x + 6 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 8 * scale, y + 6 * scale, 4 * scale, 8 * scale);
+        gc.fillRect(x + 18 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 20 * scale, y + 6 * scale, 4 * scale, 8 * scale);
         gc.setFill(Color.BLUE);
-        gc.fillRect(x + 10, y + 8, 4, 4);
-        gc.fillRect(x + 22, y + 8, 4, 4);
+        gc.fillRect(x + 10 * scale, y + 8 * scale, 4 * scale, 4 * scale);
+        gc.fillRect(x + 22 * scale, y + 8 * scale, 4 * scale, 4 * scale);
     }
 
-    public void draw_ghost_eyes_looking_right(GraphicsContext gc, int x, int y) {
+    public void draw_ghost_eyes_looking_right(GraphicsContext gc, int x, int y, int scale) {
         gc.setFill(Color.WHITE);
-        gc.fillRect(x + 2, y + 8, 8, 4);
-        gc.fillRect(x + 4, y + 6, 4, 8);
-        gc.fillRect(x + 14, y + 8, 8, 4);
-        gc.fillRect(x + 16, y + 6, 4, 8);
+        gc.fillRect(x + 2 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 4 * scale, y + 6 * scale, 4 * scale, 8 * scale);
+        gc.fillRect(x + 14 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 16 * scale, y + 6 * scale, 4 * scale, 8 * scale);
         gc.setFill(Color.BLUE);
-        gc.fillRect(x + 2, y + 8, 4, 4);
-        gc.fillRect(x + 14, y + 8, 4, 4);
+        gc.fillRect(x + 2 * scale, y + 8 * scale, 4 * scale, 4 * scale);
+        gc.fillRect(x + 14 * scale, y + 8 * scale, 4 * scale, 4 * scale);
     }
 
-    public void draw_ghost_eyes_looking_up(GraphicsContext gc, int x, int y) {
+    public void draw_ghost_eyes_looking_up(GraphicsContext gc, int x, int y, int scale) {
         gc.setFill(Color.WHITE);
-        gc.fillRect(x + 6, y + 8, 8, 4);
-        gc.fillRect(x + 8, y + 6, 4, 8);
-        gc.fillRect(x + 14, y + 8, 8, 4);
-        gc.fillRect(x + 16, y + 6, 4, 8);
+        gc.fillRect(x + 6 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 8 * scale, y + 6 * scale, 4 * scale, 8 * scale);
+        gc.fillRect(x + 14 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 16 * scale, y + 6 * scale, 4 * scale, 8 * scale);
         gc.setFill(Color.BLUE);
-        gc.fillRect(x + 8, y + 6, 4, 4);
-        gc.fillRect(x + 16, y + 6, 4, 4);
+        gc.fillRect(x + 8 * scale, y + 6 * scale, 4 * scale, 4 * scale);
+        gc.fillRect(x + 16 * scale, y + 6 * scale, 4 * scale, 4 * scale);
     }
 
-    public void draw_ghost_eyes_looking_down(GraphicsContext gc, int x, int y) {
+    public void draw_ghost_eyes_looking_down(GraphicsContext gc, int x, int y, int scale) {
         gc.setFill(Color.WHITE);
-        gc.fillRect(x + 6, y + 8, 8, 4);
-        gc.fillRect(x + 8, y + 6, 4, 8);
-        gc.fillRect(x + 14, y + 8, 8, 4);
-        gc.fillRect(x + 16, y + 6, 4, 8);
+        gc.fillRect(x + 6 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 8 * scale, y + 6 * scale, 4 * scale, 8 * scale);
+        gc.fillRect(x + 14 * scale, y + 8 * scale, 8 * scale, 4 * scale);
+        gc.fillRect(x + 16 * scale, y + 6 * scale, 4 * scale, 8 * scale);
         gc.setFill(Color.BLUE);
-        gc.fillRect(x + 8, y + 10, 4, 4);
-        gc.fillRect(x + 16, y + 10, 4, 4);
+        gc.fillRect(x + 8 * scale, y + 10 * scale, 4 * scale, 4 * scale);
+        gc.fillRect(x + 16 * scale, y + 10 * scale, 4 * scale, 4 * scale);
     }
 
     public abstract void reset();
@@ -330,7 +298,7 @@ public abstract class Ghost {
 
         ArrayList<Vector2> valid_moves = new ArrayList<>();
         for (Vector2 moove : mooves_available) {
-            if (this.p.tab[(int) (this.y + moove.y)][(int) (this.x + moove.x)] != 1) {
+            if ( targets_in_bounds(this.y + moove.y, this.x + moove.x)&& this.p.tab[(int) (this.y + moove.y)][(int) (this.x + moove.x)] != 1) {
                 valid_moves.add(moove);
             }
         }
@@ -438,7 +406,6 @@ public abstract class Ghost {
                 this.y += chosenMove.y;
             }
         } else {
-            System.out.println("ERROR");
         }
 
     }

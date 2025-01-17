@@ -15,7 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.ArcType;
+import javafx.scene.shape.ArcType;  
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -67,6 +67,14 @@ public class MainMenu extends Application {
         AnchorPane menuLayout = new AnchorPane();
         menuLayout.setStyle("-fx-background-color: rgb(20, 20, 20);");
         // Boutons du menu
+        menuLayout.widthProperty().addListener((observable, oldValue, newValue) -> {
+            this.width = newValue.intValue();
+        });
+
+        menuLayout.heightProperty().addListener((observable, oldValue, newValue) -> {
+            this.height = newValue.intValue();
+        });
+        
         ArrayList<Button> Button_List = new ArrayList();
         Button_List.add(new Button("Nouvelle Partie"));
         Button_List.add(new Button("Options"));
@@ -78,11 +86,11 @@ public class MainMenu extends Application {
         imageView.setFitWidth(600);
         imageView.setFitHeight(300);
         imageView.setPreserveRatio(true);
-        AnchorPane.setTopAnchor(imageView, height / 3 - imageView.getFitHeight() / 2);
-        AnchorPane.setLeftAnchor(imageView, width / 2 - imageView.getFitWidth() / 2);
-        Canvas canvas = new Canvas(width, height);
+        AnchorPane.setTopAnchor(imageView, this.height / 3 - imageView.getFitHeight() / 2);
+        AnchorPane.setLeftAnchor(imageView, this.width / 2 - imageView.getFitWidth() / 2);
+        Canvas canvas = new Canvas(this.width, this.height);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        drawLogo(gc, 575-225, 225, 300, 200);
+        //drawLogo(gc, 575-225, 225, 300, 200);
         menuLayout.getChildren().add(canvas);
         // Actions des boutons
         Button_List.get(0).setOnAction(e -> {
@@ -119,8 +127,8 @@ public class MainMenu extends Application {
             Text text = new Text(Button_List.get(i).getText());
             text.setFont(customFont);
 
-            AnchorPane.setTopAnchor(Button_List.get(i), height / 2 - text.getBoundsInLocal().getHeight() / 2 + i * text.getBoundsInLocal().getHeight() * 3.125);
-            AnchorPane.setLeftAnchor(Button_List.get(i), width / 2 - text.getBoundsInLocal().getWidth() / 2 - width / 50);
+            AnchorPane.setTopAnchor(Button_List.get(i), this.height / 2.5 - text.getBoundsInLocal().getHeight() / 2 + i * text.getBoundsInLocal().getHeight() * 3.125);
+            AnchorPane.setLeftAnchor(Button_List.get(i), this.width / 2 - text.getBoundsInLocal().getWidth() / 2 - this.width / 50);
         }
 
         for (int i = 0; i < Button_List.size(); i++) {
@@ -128,25 +136,37 @@ public class MainMenu extends Application {
         }
         menuLayout.getChildren().add(imageView);
         ArrayList<Ghost> List_Ghost = new ArrayList();
-        List_Ghost.add(new Blinky(90,56));
-        List_Ghost.add(new Clyde(90,56));
-        List_Ghost.add(new Pinky(90,28));
-        List_Ghost.add(new Inky(90,28));
+        List_Ghost.add(new Blinky(0,28));
+        List_Ghost.add(new Clyde(90,28));
+        List_Ghost.add(new Pinky(180,28));
+        List_Ghost.add(new Inky(270,28));
         int iteration_count = 0;
         for(Ghost ghost: List_Ghost) {
             if (iteration_count%2==0) {
-                ghost.x = 24;
+                ghost.x = (24*this.width)/1150;
             } else {
-                ghost.x = 20;
+                ghost.x = (20*this.width)/1150;
             }
-            ghost.y = 6+3*iteration_count;
+            ghost.y = ((6+3*iteration_count)*this.height)/800;
             iteration_count++;
         }
         for(Ghost ghost: List_Ghost) {
-            ghost.draw_ghost(gc);
+            ghost.draw_ghost(gc,2);
         }
-
-        return new Scene(menuLayout, width, height);
+        gc.setFont(customFont);
+        gc.setFill(Color.RED);
+        gc.fillText("< Blinky >", this.width/2 + this.width/4, this.height/2 - this.height/30);
+        gc.setFill(Color.ORANGE);
+        gc.fillText("< Clyde >", this.width/2 + this.width/3, this.height/2 + this.height/9);
+        gc.setFill(Color.PINK);
+        gc.fillText("< Pinky >", this.width/2 + this.width/4, this.height/2 + this.height/4);
+        gc.setFill(Color.SKYBLUE);
+        gc.fillText("< Inky >", this.width/2 + this.width/3, this.height/2 + this.height/2.5);
+             
+        
+        
+        
+        return new Scene(menuLayout, this.width, this.height);
     }
 
     private Scene createNewGameScene() {
@@ -156,25 +176,25 @@ public class MainMenu extends Application {
         //Button backButton = new Button("Retour au menu");
         //backButton.setOnAction(e -> switchToScene(createMainMenu()));
         //layout.getChildren().add(backButton);
-        return new Scene(layout, width, height);
+        return new Scene(layout, this.width, this.height);
     }
 
     private void drawGrid(Canvas canvas, int smoothingRadius) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill(Color.rgb(50, 50, 50));
-        gc.fillRect(0, 0, width, height);
+        gc.fillRect(0, 0, this.width, this.height);
         // Définition de la couleur des lignes
         gc.setStroke(Color.rgb(255, 255, 255));
         // Dessin des lignes verticales
-        for (int i = 1; i <= width / smoothingRadius; i++) {
+        for (int i = 1; i <= this.width / smoothingRadius; i++) {
             double x = i * smoothingRadius;
-            gc.strokeLine(x, 0, x, height);
+            gc.strokeLine(x, 0, x, this.height);
         }
 
         // Dessin des lignes horizontales   
-        for (int i = 1; i <= height / smoothingRadius; i++) {
+        for (int i = 1; i <= this.height / smoothingRadius; i++) {
             double y = i * smoothingRadius;
-            gc.strokeLine(0, y, width, y);
+            gc.strokeLine(0, y, this.width, y);
         }
     }
     private static int extraireScore(String ligne) {
@@ -209,43 +229,44 @@ public class MainMenu extends Application {
             );
         Text text = new Text(Quitter.getText());
         text.setFont(customFont);
-        Quitter.setLayoutX(width/2 - text.getBoundsInLocal().getWidth()/2);
-        Quitter.setLayoutY(height - height/10 - text.getBoundsInLocal().getHeight()/2);
+        Quitter.setLayoutX(this.width/2 - text.getBoundsInLocal().getWidth()/2);
+        Quitter.setLayoutY(this.height - this.height/10 - text.getBoundsInLocal().getHeight()/2);
         gc.setFont(Font.loadFont(getClass().getResourceAsStream("/ressources/Jaro.ttf"), 30));
         gc.setFill(Color.WHITE);
-        gc.fillText("Rang", width/10 ,height/10*2);
+        gc.fillText("Rang", this.width/10 ,this.height/10*2);
         text = new Text("Rang");
-        gc.fillText("Score", width/10*2.25 ,height/10*2);
+        gc.fillText("Score", this.width/10*2.25 ,this.height/10*2);
         Text text2 = new Text("Score");
         text2.setFont(customFont);
-        gc.fillText("Utilisateur", width/10*3.5 ,height/10*2);
+        gc.fillText("Utilisateur", this.width/10*3.5 ,this.height/10*2);
         Text text3 = new Text("Utilisateur");
         text3.setFont(customFont);
-        gc.fillText("Date", width/10*5.75 ,height/10*2);
+        gc.fillText("Date", this.width/10*5.75 ,this.height/10*2);
         Text text4 = new Text("Date");
         text4.setFont(customFont);
         
-        String cheminFichier = "./Users_Highscore/Highscores.txt";
+        
+        String cheminFichier = "./Users_Highscore/Highscores3.txt";
         try {
             List<String> lignes = Files.readAllLines(Paths.get(cheminFichier));
             int i = 1;
             for (String ligne: lignes) {
                 String[] parties = ligne.split(" ");
-                gc.fillText(""+i, width/10+text.getBoundsInLocal().getWidth(), height/10*2.2 + height/30*i);
+                gc.fillText(""+i, this.width/10+text.getBoundsInLocal().getWidth(), this.height/10*2.2 + this.height/30*i);
                 
                 Text text5 = new Text(""+Integer.parseInt(parties[1]));
                 text5.setFont(customFont);
-                gc.fillText(""+Integer.parseInt(parties[1]), width/10*2.25+text2.getBoundsInLocal().getWidth()-text5.getBoundsInLocal().getWidth(),
-                        height/10*2.2 + height/30*i);
+                gc.fillText(""+Integer.parseInt(parties[1]), this.width/10*2.25+text2.getBoundsInLocal().getWidth()-text5.getBoundsInLocal().getWidth(),
+                        this.height/10*2.2 + this.height/30*i);
                 
                 Text text6 = new Text(""+parties[3]);
                 text6.setFont(customFont);
-                gc.fillText(""+parties[3], width/10*3.5+text3.getBoundsInLocal().getWidth()/2-text6.getBoundsInLocal().getWidth()/2, height/10*2.2 + height/30*i);
+                gc.fillText(""+parties[3], this.width/10*3.5+text3.getBoundsInLocal().getWidth()/2-text6.getBoundsInLocal().getWidth()/2, this.height/10*2.2 + this.height/30*i);
                 
                 
                 Text text7 = new Text(""+parties[7]);
                 text7.setFont(customFont);
-                gc.fillText(""+parties[7], width/10*5.75+text4.getBoundsInLocal().getWidth()/2-text7.getBoundsInLocal().getWidth()/2, height/10*2.2 + height/30*i);
+                gc.fillText(""+parties[7], this.width/10*5.75+text4.getBoundsInLocal().getWidth()/2-text7.getBoundsInLocal().getWidth()/2, this.height/10*2.2 + this.height/30*i);
                 i++;
             }
         } catch (IOException ex) {
@@ -294,7 +315,7 @@ public class MainMenu extends Application {
         }
 
         // Création du Canvas pour dessiner la grille
-        Canvas canvas = new Canvas(width, height); // Dimensions arbitraires
+        Canvas canvas = new Canvas(this.width, this.height); // Dimensions arbitraires
 
         // Ajout du Canvas au layout
         layout.getChildren().add(canvas);
@@ -308,8 +329,8 @@ public class MainMenu extends Application {
 
             Text text = new Text(Button_List.get(0).getText());
             text.setFont(javafx.scene.text.Font.font("Arial", FontWeight.BOLD, 16));
-            AnchorPane.setTopAnchor(Button_List.get(0), height - 50 - text.getBoundsInLocal().getHeight() / 2);
-            AnchorPane.setLeftAnchor(Button_List.get(0), width / 2 - text.getBoundsInLocal().getWidth() / 1.45);
+            AnchorPane.setTopAnchor(Button_List.get(0), this.height - 50 - text.getBoundsInLocal().getHeight() / 2);
+            AnchorPane.setLeftAnchor(Button_List.get(0), this.width / 2 - text.getBoundsInLocal().getWidth() / 1.45);
             layout.getChildren().add(Button_List.get(0));
 
             String txt = nb_player.value == 1 ? nb_player.value + " joueur" : nb_player.value + " joueurs";
@@ -319,14 +340,14 @@ public class MainMenu extends Application {
 
             Text t2 = new Text(nb_player.left_arrow.getText());
             t2.setFont(javafx.scene.text.Font.font("Arial", FontWeight.BOLD, 16));
-            AnchorPane.setTopAnchor(nb_player.left_arrow, height / 40 - t2.getBoundsInLocal().getHeight() / 2);
-            AnchorPane.setLeftAnchor(nb_player.left_arrow, (width / 40.0) * 2.75 - text.getBoundsInLocal().getWidth() / 2 - t2.getBoundsInLocal().getWidth() / 2);
+            AnchorPane.setTopAnchor(nb_player.left_arrow, this.height / 40 - t2.getBoundsInLocal().getHeight() / 2);
+            AnchorPane.setLeftAnchor(nb_player.left_arrow, (this.width / 40.0) * 2.75 - text.getBoundsInLocal().getWidth() / 2 - t2.getBoundsInLocal().getWidth() / 2);
             t2 = new Text(nb_player.right_arrow.getText());
-            AnchorPane.setTopAnchor(nb_player.right_arrow, height / 40 - t2.getBoundsInLocal().getHeight() / 2);
-            AnchorPane.setLeftAnchor(nb_player.right_arrow, (width / 40.0) * 2.75 + text.getBoundsInLocal().getWidth() * 1.5 - t2.getBoundsInLocal().getWidth() / 2);
+            AnchorPane.setTopAnchor(nb_player.right_arrow, this.height / 40 - t2.getBoundsInLocal().getHeight() / 2);
+            AnchorPane.setLeftAnchor(nb_player.right_arrow, (this.width / 40.0) * 2.75 + text.getBoundsInLocal().getWidth() * 1.5 - t2.getBoundsInLocal().getWidth() / 2);
 
-            AnchorPane.setTopAnchor(Button_List.get(3), height / 40 - text.getBoundsInLocal().getHeight() / 2);
-            AnchorPane.setLeftAnchor(Button_List.get(3), (width / 40.0) * 2.75);
+            AnchorPane.setTopAnchor(Button_List.get(3), this.height / 40 - text.getBoundsInLocal().getHeight() / 2);
+            AnchorPane.setLeftAnchor(Button_List.get(3), (this.width / 40.0) * 2.75);
             layout.getChildren().add(Button_List.get(3));
             layout.getChildren().add(nb_player.left_arrow);
             layout.getChildren().add(nb_player.right_arrow);
@@ -335,13 +356,13 @@ public class MainMenu extends Application {
                 final int c = (i % 2 == 1) ? 1 : 0;
                 final int d = i;
 
-                option_button_display_List.get(i).set_button_action(layout, 50 + c * 550, 100 + b * 300, width, height);
+                option_button_display_List.get(i).set_button_action(layout, 50 + c * 550, 100 + b * 300, this.width, this.height);
                 layout.setOnKeyPressed(event -> {
-                    option_button_display_List.get(d).KeyPressed(layout, event, 50 + c * 550, 100 + b * 300, width, height);
+                    option_button_display_List.get(d).KeyPressed(layout, event, 50 + c * 550, 100 + b * 300, this.width, this.height);
 
                 });
 
-                option_button_display_List.get(i).Button_display(layout, 50 + c * 550, 100 + b * 300, width, height, i + 1);
+                option_button_display_List.get(i).Button_display(layout, 50 + c * 550, 100 + b * 300, this.width, this.height, i + 1);
             }
         };
 
@@ -386,7 +407,7 @@ public class MainMenu extends Application {
         }
 
         updateOptions.run();
-        return new Scene(layout, width, height);
+        return new Scene(layout, this.width, this.height);
     }
 
     /**

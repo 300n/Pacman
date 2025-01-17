@@ -2,7 +2,6 @@
 import java.util.ArrayList;
 import javafx.scene.paint.Color;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.shape.ArcType;
 
 public class Pacman {
@@ -11,40 +10,43 @@ public class Pacman {
     int vies = 3;
     double speed = 2;
     double previous_x, previous_y;
+    Vector2 resetcoords = new Vector2(0,0);
     int facing;
     int radius_pacman = 28;
     Pacman__ p = new Pacman__();
     double interpolatedX, interpolatedY;
     final int[] mouthAngle = {0};   // Animation de la bouche
     final boolean[] mouthOpening = {true}; // Indique si la bouche est en train de s'ouvrir
-
-    public Pacman() {
-        this.coords.x = 3;
-        this.coords.y = 1;
-        this.previous_x = 2;
-        this.previous_y = 1;
+    int score = 0;
+    int point_ghost = 200;
+    Color pacman_color;
+    
+    public Pacman(double x, double y, Color color) {
+        this.coords.x = x;
+        this.coords.y = y;
+        this.previous_x = x;
+        this.previous_y = y;
+        this.resetcoords = new Vector2(x,y);
         this.facing = 0;
+        this.pacman_color = color;
     }
 
     public void reset() {
-        this.coords.x = 2;
-        this.coords.y = 1;
-        this.previous_x = 2;
-        this.previous_y = 1;
+        this.coords.x = this.resetcoords.x;
+        this.coords.y = this.resetcoords.y;
+        this.previous_x = this.resetcoords.x;
+        this.previous_y = this.resetcoords.y;
         this.facing = 0;
     }
 
     public void draw_Pacman(GraphicsContext gc) {
-        gc.setFill(Color.YELLOW);
+        gc.setFill(this.pacman_color);
 
         if (this.previous_x == this.coords.x && this.previous_y == this.coords.y) {
             gc.fillOval(p.board_top_x + p.width / p.tab[0].length * this.coords.x - this.radius_pacman / 2 + p.width / p.tab[0].length / 2, p.board_top_y + p.height
                     / p.tab.length * this.coords.y + p.height / p.tab.length / 2 - this.radius_pacman / 2, this.radius_pacman, this.radius_pacman);
 
         } else {
-
-            gc.setFill(Color.YELLOW);
-
             // Mise à jour de l'animation de la bouche
             if (this.mouthOpening[0]) {
                 this.mouthAngle[0] += 5; // Augmente l'angle d'ouverture
@@ -80,7 +82,7 @@ public class Pacman {
     }
 
     public void draw_dying_animation(GraphicsContext gc, int[] temp) {
-        gc.setFill(Color.YELLOW);
+        gc.setFill(this.pacman_color);
         this.mouthAngle[0] += 5;
         this.mouthOpening[0] = true;
         gc.fillArc(p.board_top_x + p.width / p.tab[0].length * this.interpolatedX + p.width / p.tab[0].length / 2 - this.radius_pacman / 2, p.board_top_y
@@ -218,11 +220,11 @@ public class Pacman {
         }
     }
 
-    public void draw_vies(GraphicsContext gc) {
-        gc.setFill(Color.YELLOW);
+    public void draw_vies(GraphicsContext gc, int number) {
+        gc.setFill(this.pacman_color);
         for (int i = 0; i < this.vies; i++) {
-
-            gc.fillArc(p.board_top_x+ p.width/25 - p.width / (p.tab[0].length * 2) - this.radius_pacman / 2 + this.radius_pacman * i + (p.width / p.tab[0].length - this.radius_pacman) * i,
+            
+            gc.fillArc(p.board_top_x+ p.width/25 - p.width / (p.tab[0].length * 2) - this.radius_pacman / 2 + this.radius_pacman * i + (p.width / p.tab[0].length - this.radius_pacman) * i + number*120,
                     
                     p.board_top_y +p.width+p.width/10 - this.radius_pacman * 2,
                     this.radius_pacman, this.radius_pacman,

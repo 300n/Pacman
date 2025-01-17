@@ -2,6 +2,7 @@ public class Timer {
     long timeStart;
     long timeEnd;
     long timeStop;
+    long timeStop_f;
     
     
     public Timer() {}
@@ -14,9 +15,9 @@ public class Timer {
         return this.timeStop-this.timeStart;
     }
     public void Stop_Timer() {
-        this.timeStop = System.currentTimeMillis();
+        this.timeStop_f = get_Time();
     }
     public void start_again() {
-        this.timeStart -= this.timeStop;
+        this.timeStart = this.timeStop_f;
     }
 }
