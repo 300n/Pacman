@@ -13,7 +13,7 @@ A JavaFX implementation of the classic Pacman arcade game featuring authentic gh
 
 ## 🎯 About
 
-This is a recreation of the classic Pacman arcade game built with JavaFX. The game faithfully recreates the original gameplay mechanics including intelligent ghost AI with distinct personalities, power pellet mechanics, and supports up to 4 players simultaneously.
+This is a recreation of the classic Pacman arcade game built with JavaFX. The game faithfully recreates the original gameplay mechanics including intelligent ghost AI with distinct personalities, power pellet mechanics, and supports up to 4 players simultaneously
 
 ## ✨ Features
 
