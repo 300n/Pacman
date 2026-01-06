@@ -1,4 +1,4 @@
-# 🎮 Pacman Game
+# 🎮 Pacman 
 
 A JavaFX implementation of the classic Pacman arcade game featuring authentic ghost AI, multiplayer support, and smooth animations
 
