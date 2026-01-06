@@ -43,7 +43,7 @@ This is a recreation of the classic Pacman arcade game built with JavaFX. The ga
 ![Main Menu](Image/MainMenu.png)
 
 
-![Gameplay](Image/2Players-Gameplay)
+![Gameplay](Image/2Players-Gameplay.png)
 
 
 ## 🚀 Installation
