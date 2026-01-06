@@ -9,7 +9,6 @@ A JavaFX implementation of the classic Pacman arcade game featuring authentic gh
 
 - [About](#about)
 - [Features](#features)
-- [Demo](#demo)
 - [Installation](#installation)
 
 ## 🎯 About
@@ -30,12 +29,6 @@ This is a recreation of the classic Pacman arcade game built with JavaFX. The ga
 - **Smooth Animations**: Interpolated movement and mouth animations
 - **Lives System**: 3 lives per player
 - **Custom Controls**: Configurable keyboard controls for each player
-
-## 🎬 Demo
-
-### Gameplay Video
-
-![Gameplay Video](path/to/gameplay-video.gif)
 
 
 ### Screenshots
