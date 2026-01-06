@@ -2,7 +2,7 @@
 
 A JavaFX implementation of the classic Pacman arcade game featuring authentic ghost AI, multiplayer support, and smooth animations
 
-![Pacman Game Screenshot](Image/1Player-Gameplay.png)
+![Pacman Game Screenshot](Image/Player-Gameplay.png)
 
 
 ## 📋 Table of Contents
