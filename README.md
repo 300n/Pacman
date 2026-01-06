@@ -2,7 +2,7 @@
 
 A JavaFX implementation of the classic Pacman arcade game featuring authentic ghost AI, multiplayer support, and smooth animations
 
-![Pacman Game Screenshot](path/to/screenshot.png)
+![Pacman Game Screenshot](Pacman/Image/1Player-Gameplay.png)
 
 
 ## 📋 Table of Contents
@@ -40,10 +40,10 @@ This is a recreation of the classic Pacman arcade game built with JavaFX. The ga
 
 ### Screenshots
 
-![Main Menu](path/to/menu-screenshot.png)
+![Main Menu](Pacman/Image/MainMenu.png)
 
 
-![Gameplay](path/to/gameplay-screenshot.png)
+![Gameplay](Pacman/Image/2Player-Gameplay)
 
 
 ## 🚀 Installation
@@ -61,28 +61,11 @@ git clone https://github.com/300n/Pacman.git
 cd Pacman
 ```
 
-2. Ensure you have the required resources:
-   - Custom font: `/ressources/Jaro.ttf`
-   - Images: `/ressources/Pacman_icon2.png`, `/ressources/Pacman_main_logo.png`
-
-3. Create the high scores directory:
-```bash
-mkdir -p ../Users_Highscore
-touch ../Users_Highscore/Highscores3.txt
-```
-
-4. Compile and run:
+2. Compile and run:
 ```bash
 javac MainMenu.java
 java MainMenu
-
-
-## 🛠️ Technologies Used
-
-- **Language**: Java
-- **Framework**: JavaFX
-- **Graphics**: JavaFX Canvas and GraphicsContext
-- **Architecture**: Object-oriented with inheritance for ghost behaviors
+```
 
 ---
 
